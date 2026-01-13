@@ -1,7 +1,6 @@
 ---
 - name: Install packages
-  ansible.builtin.apt:
-    name: "{{ item.name | default(omit)}}"
-    deb: "{{ item.deb | default(omit) }}"
+  ansible.builtin.package:
+    name: "{{ generic_package_names[ansible_os_family] | default(omit)}}"
+    # deb: "{{ item.deb | default(omit) }}"
     state: present
-  with_items: "{{ packages }}"

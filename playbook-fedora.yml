@@ -1,0 +1,140 @@
+---
+- name: Install basic components
+  hosts: localhost
+  become: true
+  gather_facts: true
+  vars:
+    generic_package_names:
+      RedHat:
+        - apt-transport-https
+        - ca-certificates
+        - cups
+        - curl
+        - gnupg2-dirmngr
+        - dmidecode
+        - filezilla
+        - fping
+        - gimp
+        - git-all
+        - gnupg
+        - htop
+        - inkscape
+        - iperf3
+        - jq
+        - keepassxc
+        - make
+        - mc
+        - net-tools
+        - nmap
+        - obs-studio
+        - openconnect
+        - pavucontrol
+        - postgresql
+        - pwgen
+        - qbittorrent
+        - remmina
+        - resolvconf
+        - s3cmd
+        - simplescreenrecorder
+        - sshpass
+        - tcpdump
+        - telnet
+        - testdisk
+        - thunderbird
+        - vim
+        - vlc
+        - wget
+        - whois
+        - wireguard-tools
+        - wireshark
+  roles:
+    - role: install-packages
+  tags:
+    - install-packages
+
+- name: Install VS Code
+  hosts: localhost
+  become: true
+  gather_facts: true
+  roles:
+    - role: vscode
+
+# - name: Install docker
+#   hosts: localhost
+#   become: true
+#   gather_facts: true
+#   roles:
+#     - role: docker
+
+# - name: Install dbeaver
+#   hosts: localhost
+#   become: true
+#   gather_facts: true
+#   roles:
+#     - role: dbeaver
+
+# - name: Install clickhouse-client
+#   hosts: localhost
+#   become: true
+#   gather_facts: true
+#   roles:
+#     - role: clickhouse
+
+# - name: Install sublime-text
+#   hosts: localhost
+#   become: true
+#   gather_facts: true
+#   roles:
+#     - role: sublime-text
+
+# - name: Install hashicorp terraform
+#   hosts: localhost
+#   become: true
+#   gather_facts: true
+#   roles:
+#     - role: hashicorp
+
+# - name: Install kubernetes kubectl
+#   hosts: localhost
+#   become: true
+#   gather_facts: true
+#   roles:
+#     - role: kubernetes
+
+# - name: Install helm
+#   hosts: localhost
+#   become: true
+#   gather_facts: true
+#   roles:
+#     - role: helm
+
+# - name: Install zsh
+#   hosts: localhost
+#   become: true
+#   gather_facts: true
+#   roles:
+#     - role: gantsign.oh-my-zsh
+#       users:
+#         - username: rmntrvn
+#           oh_my_zsh:
+#             install: yes
+#             theme: ys
+#             plugins:
+#               - git
+#               - gcloud
+#               - vagrant
+#               - terraform
+#               - kubectl
+#               - helm
+#               # - zsh-syntax-highlighting
+#               # - zsh-autosuggestions
+#               - vault
+
+- name: Set hostname
+  hosts: localhost
+  become: true
+  gather_facts: true
+  roles:
+    - role: hostname
+  tags:
+    - hostname

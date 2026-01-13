@@ -4,8 +4,80 @@
   hosts: localhost
   become: true
   gather_facts: true
+  vars:
+    generic_package_names:
+      RedHat:
+        - apt-transport-https
+        - ca-certificates
+        - cups
+        - curl
+        - gnupg2-dirmngr
+        - dmidecode
+        - filezilla
+        - fping
+        - gimp
+        - git-all
+        - gnupg
+        - htop
+        - inkscape
+        - iperf3
+        - jq
+        - keepassxc
+        - make
+        - mc
+        - net-tools
+        - nmap
+        - obs-studio
+      Debian:
+        - apt-transport-https
+        - ca-certificates
+        - cups
+        - curl
+        - dirmngr
+        - dmidecode
+        - filezilla
+        - fping
+        - gimp
+        - git
+        - gnupg
+        - htop
+        - inkscape
+        - iperf3
+        - jq
+        - keepassxc
+        - make
+        - mc
+        - neofetch
+        - net-tools
+        - nmap
+        - obs-studio
+        - openconnect
+        - pavucontrol
+        - peek
+        - postgresql-client
+        - pwgen
+        - qbittorrent
+        - remmina
+        - resolvconf
+        - s3cmd
+        - shadowsocks-libev
+        - simplescreenrecorder
+        - sshpass
+        - tcpdump
+        - telnet
+        - testdisk
+        - thunderbird
+        - vim
+        - vlc
+        - vokoscreen
+        - wget
+        - whois
+        - wireguard
+        - wireshark
   roles:
     - role: install-packages
+  tags:
+    - install-packages
 
 - name: Install VS Code
   hosts: localhost
@@ -72,7 +144,7 @@
 
 - name: Install zsh
   hosts: localhost
-  become true
+  become: true
   gather_facts: true
   roles:
     - role: gantsign.oh-my-zsh

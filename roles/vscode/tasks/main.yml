@@ -1,11 +1,12 @@
 ---
 
-- name: Install dependencies (apt)
-  ansible.builtin.apt:
+- name: Install dependencies
+  ansible.builtin.package:
     name:
       - gpg
       - wget
       - apt-transport-https
+    update_cache: yes
     state: present
 
 - name: Create APT keyrings dir (apt)
@@ -13,6 +14,7 @@
     path: '/etc/apt/keyrings'
     state: directory
     mode: 'u=rwx,go=rx'
+  when: ansible_facts['os_family'] == 'Debian'
 
 - name: Install key (apt)
   ansible.builtin.get_url:
@@ -20,6 +22,7 @@
     dest: '/etc/apt/keyrings/packages.microsoft.gpg'
     mode: 'u=rw,go=r'
     force: yes
+  when: ansible_facts['os_family'] == 'Debian'
 
 - name: Add VS Code repository (apt)
   ansible.builtin.apt_repository:
@@ -27,8 +30,35 @@
     state: present
     filename: 'vscode'
     update_cache: true
+  when: ansible_facts['os_family'] == 'Debian'
 
 - name: Install VS Code (apt)
   ansible.builtin.apt:
     name: 'code'
     state: present
+  when: ansible_facts['os_family'] == 'Debian'
+
+- name: Install the key and yum repository by running the following script (dnf)
+  ansible.builtin.rpm_key:
+    key: https://packages.microsoft.com/keys/microsoft.asc
+    state: present
+  when: ansible_facts['os_family'] == 'RedHat'
+
+- name: Install VS Code repo (dnf)
+  become: true
+  ansible.builtin.yum_repository:
+    name: 'code'
+    description: Visual Studio Code
+    enabled: true
+    file: vscode
+    baseurl: 'https://packages.microsoft.com/yumrepos/vscode'
+    gpgkey: 'https://packages.microsoft.com/keys/microsoft.asc'
+    gpgcheck: 1
+  when: ansible_facts['os_family'] == 'RedHat'
+
+- name: Install VS Code (dnf) 
+  ansible.builtin.dnf:
+    name: code
+    state: present
+    update_cache: true
+  when: ansible_facts['os_family'] == 'RedHat'
