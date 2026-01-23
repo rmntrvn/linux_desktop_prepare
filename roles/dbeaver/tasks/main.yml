@@ -7,12 +7,14 @@
       - openjdk-17-jdk
       - openjdk-17-jre
     state: present
+  when: ansible_facts['os_family'] == 'Debian'
 
 - name: Create APT keyrings dir (apt)
   ansible.builtin.file:
     path: '/etc/apt/keyrings'
     state: directory
     mode: 'u=rwx,go=rx'
+  when: ansible_facts['os_family'] == 'Debian'
 
 - name: Install key (apt)
   ansible.builtin.get_url:
@@ -20,6 +22,7 @@
     dest: '/etc/apt/keyrings/dbeaver.gpg.key'
     mode: 'u=rw,go=r'
     force: yes
+  when: ansible_facts['os_family'] == 'Debian'
 
 - name: Add dbeaver repository (apt)
   ansible.builtin.apt_repository:
@@ -27,8 +30,17 @@
     state: present
     filename: 'dbeaver'
     update_cache: true
+  when: ansible_facts['os_family'] == 'Debian'
 
 - name: Install dbeaver (apt)
   ansible.builtin.apt:
     name: 'dbeaver-ce'
     state: present
+  when: ansible_facts['os_family'] == 'Debian'
+
+- name: Install dbeaver  (dnf)
+  ansible.builtin.dnf:
+    name: "https://dbeaver.io/files/dbeaver-ce-latest-stable.x86_64.rpm"
+    state: present
+    update_cache: true
+  when: ansible_facts['os_family'] == 'RedHat'

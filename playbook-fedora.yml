@@ -59,26 +59,26 @@
   roles:
     - role: vscode
 
-# - name: Install docker
-#   hosts: localhost
-#   become: true
-#   gather_facts: true
-#   roles:
-#     - role: docker
+- name: Install docker
+  hosts: localhost
+  become: true
+  gather_facts: true
+  roles:
+    - role: docker
 
-# - name: Install dbeaver
-#   hosts: localhost
-#   become: true
-#   gather_facts: true
-#   roles:
-#     - role: dbeaver
+- name: Install dbeaver
+  hosts: localhost
+  become: true
+  gather_facts: true
+  roles:
+    - role: dbeaver
 
-# - name: Install clickhouse-client
-#   hosts: localhost
-#   become: true
-#   gather_facts: true
-#   roles:
-#     - role: clickhouse
+- name: Install clickhouse-client
+  hosts: localhost
+  become: true
+  gather_facts: true
+  roles:
+    - role: clickhouse-client
 
 # - name: Install sublime-text
 #   hosts: localhost

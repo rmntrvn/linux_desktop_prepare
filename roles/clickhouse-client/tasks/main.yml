@@ -1,0 +1,49 @@
+---
+
+- name: Install dependencies (apt)
+  ansible.builtin.apt:
+    name:
+      - apt-transport-https 
+      - ca-certificates
+      - dirmngr
+    state: present
+  when: ansible_facts['os_family'] == 'Debian'
+
+- name: Add clickhouse key (apt)
+  ansible.builtin.apt_key: 
+    keyserver: "hkp://keyserver.ubuntu.com:80"
+    id: '8919F6BD2B48D754'
+    state: present
+  when: ansible_facts['os_family'] == 'Debian'
+
+- name: Add clickhouse repository (apt)
+  ansible.builtin.apt_repository:
+    repo: 'deb https://packages.clickhouse.com/deb stable main'
+    state: present
+    filename: 'clickhouse'
+    update_cache: true
+  when: ansible_facts['os_family'] == 'Debian'
+
+- name: Update cache (apt)
+  ansible.builtin.apt: 
+    name: clickhouse-client
+    state: present
+  when: ansible_facts['os_family'] == 'Debian'
+
+- name: Install clickhouse repo (dnf)
+  become: true
+  ansible.builtin.yum_repository:
+    name: 'clickhouse'
+    description: Clickhouse
+    enabled: true
+    file: vscode
+    baseurl: 'https://packages.clickhouse.com/rpm/clickhouse.repo'
+    gpgcheck: 1
+  when: ansible_facts['os_family'] == 'RedHat'
+
+- name: Install clickhouse-client (dnf) 
+  ansible.builtin.dnf:
+    name: clickhouse-client
+    state: present
+    update_cache: true
+  when: ansible_facts['os_family'] == 'RedHat'

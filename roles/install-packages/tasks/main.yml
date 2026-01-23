@@ -4,3 +4,4 @@
     name: "{{ generic_package_names[ansible_os_family] | default(omit)}}"
     # deb: "{{ item.deb | default(omit) }}"
     state: present
+    update_cache: true
