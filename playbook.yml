@@ -128,6 +128,8 @@
   gather_facts: true
   roles:
     - role: vscode
+  tags:
+    - vscode
 
 - name: Install dbeaver
   hosts: localhost
@@ -135,6 +137,8 @@
   gather_facts: true
   roles:
     - role: dbeaver
+  tags:
+    - dbeaver
 
 - name: Install clickhouse-client
   hosts: localhost
@@ -142,6 +146,8 @@
   gather_facts: true
   roles:
     - role: clickhouse-client
+  tags:
+    - clickhouse-client
 
 - name: Optimize dnf for Fedora
   hosts: localhost
@@ -171,6 +177,8 @@
   gather_facts: true
   roles:
     - role: sublime-text
+  tags:
+    - sublime-text
 
 - name: Install hashicorp
   hosts: localhost
@@ -183,6 +191,8 @@
       - vault
   roles:
     - role: hashicorp
+  tags:
+    - hashicorp
 
 - name: Install kubernetes kubectl
   hosts: localhost
@@ -190,6 +200,8 @@
   gather_facts: true
   roles:
     - role: kubernetes
+  tags:
+    - kubernetes
 
 - name: Install helm
   hosts: localhost
@@ -197,6 +209,8 @@
   gather_facts: true
   roles:
     - role: helm
+  tags:
+    - helm
 
 - name: Install zsh
   hosts: localhost
@@ -211,6 +225,8 @@
       - fzf
   roles:
     - role: zsh
+  tags:
+    - zsh
 
 - name: Install kubie
   hosts: localhost
@@ -221,6 +237,8 @@
       ""
   roles:
     - role: kubie
+  tags:
+    - kubie
 
 - name: Install Vivaldi browser
   hosts: localhost
@@ -228,6 +246,8 @@
   gather_facts: true
   roles:
     - role: vivaldi
+  tags:
+    - vivaldi
 
 - name: Install Time Messenger
   hosts: localhost
@@ -235,6 +255,8 @@
   gather_facts: true
   roles:
     - role: time-messenger
+  tags:
+    - time-messenger
 
 - name: Install flathub packages
   hosts: localhost
@@ -245,6 +267,8 @@
       - org.telegram.desktop
   roles:
     - role: flathub
+  tags:
+    - flathub
 
 - name: Install Tailscale client
   hosts: localhost
@@ -254,6 +278,8 @@
     tailscale_version: ""
   roles:
     - role: tailscale
+  tags:
+    - tailscale
 
 - name: Install Docker/Podman
   hosts: localhost
@@ -264,6 +290,8 @@
     docker_user: "{{ ansible_env.SUDO_USER | default(lookup('env', 'USER')) | default('rmntrvn') }}"
   roles:
     - role: containers
+  tags:
+    - containers
 
 - name: Install OpenCode and codebase-memory-mcp
   hosts: localhost
