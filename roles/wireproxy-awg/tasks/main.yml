@@ -7,7 +7,7 @@
       - iptables
       - wireguard-tools
     state: present
-  when: ansible_os_family == 'Debian'
+  when: ansible_facts['os_family'] == 'Debian'
 
 - name: Установка зависимостей (dnf)
   ansible.builtin.dnf:
@@ -17,7 +17,7 @@
       - iptables
       - wireguard-tools
     state: present
-  when: ansible_os_family == 'RedHat'
+  when: ansible_facts['os_family'] == 'RedHat'
 
 - name: Получение последнего релиза wireproxy-awg
   ansible.builtin.uri:
@@ -34,19 +34,19 @@
 
 - name: Скачивание wireproxy-awg
   ansible.builtin.get_url:
-    url: "https://github.com/artem-russkikh/wireproxy-awg/releases/download/v{{ wireproxy_version }}/wireproxy-awg-linux-amd64.tar.gz"
-    dest: "/tmp/wireproxy-awg-linux-amd64.tar.gz"
+    url: "https://github.com/artem-russkikh/wireproxy-awg/releases/download/v{{ wireproxy_version }}/{{ wireproxy_archive_name }}"
+    dest: "/tmp/{{ wireproxy_archive_name }}"
     mode: '0644'
 
 - name: Распаковка wireproxy-awg
   ansible.builtin.unarchive:
-    src: /tmp/wireproxy-awg-linux-amd64.tar.gz
+    src: "/tmp/{{ wireproxy_archive_name }}"
     dest: /tmp
     remote_src: true
 
 - name: Установка wireproxy-awg в /usr/local/bin
   ansible.builtin.copy:
-    src: /tmp/wireproxy-awg
+    src: /tmp/wireproxy
     dest: /usr/local/bin/wireproxy-awg
     remote_src: true
     mode: '0755'
@@ -57,7 +57,8 @@
     state: absent
   loop:
     - /tmp/wireproxy-awg
-    - /tmp/wireproxy-awg-linux-amd64.tar.gz
+    - /tmp/wireproxy
+    - "/tmp/{{ wireproxy_archive_name }}"
 
 - name: Создание директории для конфига wireproxy
   ansible.builtin.file:
