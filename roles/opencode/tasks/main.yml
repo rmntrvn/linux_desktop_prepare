@@ -36,20 +36,28 @@
     mode: '0755'
   loop:
     - "{{ opencode_home }}/.local/bin"
-    - "{{ opencode_home }}/.opencode/bin"
     - "{{ opencode_home }}/.config/opencode"
 
-- name: Установка OpenCode
+- name: Создание каталога системной установки OpenCode
+  ansible.builtin.file:
+    path: "{{ opencode_install_root }}"
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Установка OpenCode глобально
   ansible.builtin.shell: >-
     curl -fsSL https://opencode.ai/v2/install |
     bash -s --
     {% if opencode_version | length > 0 %}--version {{ opencode_version }}{% endif %}
     --no-modify-path
   args:
-    creates: "{{ opencode_home }}/.opencode/bin/opencode"
+    creates: "{{ opencode_install_root }}/.opencode/bin/opencode"
     executable: /bin/bash
   become: true
-  become_user: "{{ opencode_user }}"
+  environment:
+    HOME: "{{ opencode_install_root }}"
 
 - name: Установка codebase-memory-mcp и настройка интеграции OpenCode
   ansible.builtin.shell: >-
@@ -83,8 +91,8 @@
 - name: Добавление пользовательских каталогов инструментов в .profile
   ansible.builtin.lineinfile:
     path: "{{ opencode_home }}/.profile"
-    line: 'export PATH="$HOME/.local/bin:$HOME/.opencode/bin:$PATH"'
-    regexp: '^export PATH="\$HOME/\.local/bin:\$HOME/\.opencode/bin:'
+    line: 'export PATH="$HOME/.local/bin:$PATH"'
+    regexp: '^export PATH="\$HOME/\.local/bin:'
     create: true
     owner: "{{ opencode_user }}"
     group: "{{ opencode_user }}"
@@ -93,17 +101,34 @@
 - name: Добавление пользовательских каталогов инструментов в .zshrc
   ansible.builtin.lineinfile:
     path: "{{ opencode_home }}/.zshrc"
-    line: 'export PATH="$HOME/.local/bin:$HOME/.opencode/bin:$PATH"'
-    regexp: '^export PATH="\$HOME/\.local/bin:\$HOME/\.opencode/bin:'
+    line: 'export PATH="$HOME/.local/bin:$PATH"'
+    regexp: '^export PATH="\$HOME/\.local/bin:'
     create: true
     owner: "{{ opencode_user }}"
     group: "{{ opencode_user }}"
     mode: '0644'
 
+- name: Добавление пользовательских каталогов инструментов в .bashrc
+  ansible.builtin.lineinfile:
+    path: "{{ opencode_home }}/.bashrc"
+    line: 'export PATH="$HOME/.local/bin:$PATH"'
+    regexp: '^export PATH="\$HOME/\.local/bin:'
+    create: true
+    owner: "{{ opencode_user }}"
+    group: "{{ opencode_user }}"
+    mode: '0644'
+
+- name: Make OpenCode available system-wide
+  ansible.builtin.file:
+    src: "{{ opencode_install_root }}/.opencode/bin/opencode"
+    dest: /usr/local/bin/opencode
+    state: link
+    force: true
+    owner: root
+    group: root
+
 - name: Проверка установки OpenCode
-  ansible.builtin.command: "{{ opencode_home }}/.opencode/bin/opencode --version"
-  become: true
-  become_user: "{{ opencode_user }}"
+  ansible.builtin.command: /usr/local/bin/opencode --version
   changed_when: false
   register: opencode_installed_version
 

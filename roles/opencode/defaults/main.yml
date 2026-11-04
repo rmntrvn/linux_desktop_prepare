@@ -1,6 +1,7 @@
 ---
 opencode_user: "{{ ansible_env.SUDO_USER | default(lookup('env', 'USER')) | default('rmntrvn') }}"
 opencode_home: "/home/{{ opencode_user }}"
+opencode_install_root: /usr/local/share/opencode
 opencode_version: ""
 
 codebase_memory_mcp_version: ""
