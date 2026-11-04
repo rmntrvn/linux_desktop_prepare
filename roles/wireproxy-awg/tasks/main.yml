@@ -23,6 +23,7 @@
   ansible.builtin.uri:
     url: https://api.github.com/repos/artem-russkikh/wireproxy-awg/releases/latest
     return_content: true
+  check_mode: false
   register: wireproxy_latest_release
   when: wireproxy_version | default('latest') in ['', 'latest']
 
