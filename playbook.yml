@@ -29,14 +29,11 @@
         - obs-studio
         - openconnect
         - pavucontrol
-        - peek
         - postgresql
         - pwgen
         - qbittorrent
         - remmina
         - s3cmd
-        - shadowsocks-libev
-        - simplescreenrecorder
         - sshpass
         - tcpdump
         - telnet
@@ -48,7 +45,7 @@
         - wget
         - whois
         - wireguard-tools
-        - wireshark-qt
+        - wireshark
         - xclip
       Debian:
         - apt-transport-https
