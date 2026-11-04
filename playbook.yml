@@ -48,8 +48,8 @@
         - wget
         - whois
         - wireguard-tools
-         - wireshark-qt
-         - xclip
+        - wireshark-qt
+        - xclip
       Debian:
         - apt-transport-https
         - ca-certificates
@@ -95,8 +95,8 @@
         - wget
         - whois
         - wireguard
-         - wireshark
-         - xclip
+        - wireshark
+        - xclip
   roles:
     - role: install-packages
   tags:

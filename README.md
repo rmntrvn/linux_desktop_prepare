@@ -7,7 +7,7 @@ Playbook запускается локально на подготовляемо
 
 1. Установить Ansible:
 ```
-sudo apt install ansible -y       # Ubuntu
+sudo apt install ansible python3-apt -y       # Ubuntu
 # Для Fedora: sudo dnf install ansible -y
 ```
 2. Установить роли и коллекции:
@@ -15,11 +15,9 @@ sudo apt install ansible -y       # Ubuntu
 ansible-galaxy install -r requirements.yml
 ```
 3. Проверить inventory и, при необходимости, задать переменные в `-e` или inventory.
-4. Запустить playbook для Ubuntu или Fedora:
+4. Запустить общий playbook:
 ```
 ansible-playbook -i inventory.yml playbook.yml --ask-become-pass
-# Fedora допускает тот же playbook или явный Fedora-вход:
-ansible-playbook -i inventory.yml playbook-fedora.yml --ask-become-pass
 ```
 
 Для запуска отдельной части используйте tags, например:

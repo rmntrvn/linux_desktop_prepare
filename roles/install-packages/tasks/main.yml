@@ -1,7 +1,7 @@
 ---
 - name: Install packages
   ansible.builtin.package:
-    name: "{{ generic_package_names[ansible_os_family] | default(omit)}}"
+    name: "{{ generic_package_names[ansible_facts['os_family']] | default([]) }}"
     # deb: "{{ item.deb | default(omit) }}"
     state: present
     update_cache: true

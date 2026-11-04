@@ -1,3 +1,0 @@
----
-# Fedora использует общий сценарий: все роли сами выбирают apt или dnf.
-- import_playbook: playbook.yml
