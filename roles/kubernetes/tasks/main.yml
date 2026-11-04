@@ -38,11 +38,14 @@
   when: ansible_os_family == 'Debian'
 
 - name: Добавление репозитория Kubernetes (apt)
-  ansible.builtin.apt_repository:
-    repo: 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/{{ kubernetes_minor_version }}/deb/ /'
+  ansible.builtin.deb822_repository:
+    name: kubernetes
+    types: deb
+    uris: "https://pkgs.k8s.io/core:/stable:/{{ kubernetes_minor_version }}/deb/"
+    suites: /
+    components: []
+    signed_by: /etc/apt/keyrings/kubernetes-apt-keyring.gpg
     state: present
-    filename: 'kubernetes'
-    update_cache: true
   when: ansible_os_family == 'Debian'
 
 - name: Установка kubectl (apt)

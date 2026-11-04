@@ -35,17 +35,22 @@
   when: ansible_facts['os_family'] == 'Debian'
 
 - name: Add VS Code repository (apt)
-  ansible.builtin.apt_repository:
-    repo: 'deb [arch=amd64,arm64,armhf signed-by=/etc/apt/keyrings/packages.microsoft.gpg] https://packages.microsoft.com/repos/code stable main'
+  ansible.builtin.deb822_repository:
+    name: vscode
+    types: deb
+    uris: https://packages.microsoft.com/repos/code
+    suites: stable
+    components: [main]
+    architectures: [amd64, arm64, armhf]
+    signed_by: /etc/apt/keyrings/packages.microsoft.gpg
     state: present
-    filename: 'vscode'
-    update_cache: true
   when: ansible_facts['os_family'] == 'Debian'
 
 - name: Install VS Code (apt)
   ansible.builtin.apt:
     name: 'code'
     state: present
+    update_cache: true
   when: ansible_facts['os_family'] == 'Debian'
 
 - name: Install the key and yum repository by running the following script (dnf)

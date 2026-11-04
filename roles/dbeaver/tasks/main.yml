@@ -31,17 +31,21 @@
   when: ansible_facts['os_family'] == 'Debian'
 
 - name: Add dbeaver repository (apt)
-  ansible.builtin.apt_repository:
-    repo: 'deb [signed-by=/etc/apt/keyrings/dbeaver.gpg] https://dbeaver.io/debs/dbeaver-ce /'
+  ansible.builtin.deb822_repository:
+    name: dbeaver
+    types: deb
+    uris: https://dbeaver.io/debs/dbeaver-ce
+    suites: /
+    components: []
+    signed_by: /etc/apt/keyrings/dbeaver.gpg
     state: present
-    filename: 'dbeaver'
-    update_cache: true
   when: ansible_facts['os_family'] == 'Debian'
 
 - name: Install dbeaver (apt)
   ansible.builtin.apt:
     name: 'dbeaver-ce'
     state: present
+    update_cache: true
   when: ansible_facts['os_family'] == 'Debian'
 
 - name: Install dbeaver  (dnf)

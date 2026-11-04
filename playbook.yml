@@ -74,6 +74,7 @@
         - pavucontrol
         - peek
         - postgresql-client
+        - python3-debian
         - pwgen
         - qbittorrent
         - remmina

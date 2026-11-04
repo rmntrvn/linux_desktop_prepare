@@ -32,11 +32,15 @@
   when: ansible_os_family == 'Debian'
 
 - name: Добавление репозитория Helm (apt)
-  ansible.builtin.apt_repository:
-    repo: 'deb [arch=amd64 signed-by=/etc/apt/keyrings/helm.gpg] https://baltocdn.com/helm/stable/debian/ all main'
+  ansible.builtin.deb822_repository:
+    name: helm
+    types: deb
+    uris: https://baltocdn.com/helm/stable/debian/
+    suites: all
+    components: [main]
+    architectures: [amd64]
+    signed_by: /etc/apt/keyrings/helm.gpg
     state: present
-    filename: 'helm'
-    update_cache: true
   when: ansible_os_family == 'Debian'
 
 - name: Установка Helm (apt)

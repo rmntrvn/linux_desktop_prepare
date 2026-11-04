@@ -46,11 +46,15 @@
     - ansible_os_family == 'Debian'
 
 - name: Добавление репозитория Docker (Ubuntu)
-  ansible.builtin.apt_repository:
-    repo: "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
+  ansible.builtin.deb822_repository:
+    name: docker
+    types: deb
+    uris: https://download.docker.com/linux/ubuntu
+    suites: "{{ ansible_distribution_release }}"
+    components: [stable]
+    architectures: [amd64]
+    signed_by: /etc/apt/keyrings/docker.gpg
     state: present
-    filename: docker
-    update_cache: true
   when:
     - ansible_os_family == 'Debian'
 

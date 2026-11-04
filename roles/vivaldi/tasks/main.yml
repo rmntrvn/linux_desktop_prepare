@@ -32,11 +32,15 @@
   when: ansible_os_family == 'Debian'
 
 - name: Добавление репозитория Vivaldi (apt)
-  ansible.builtin.apt_repository:
-    repo: 'deb [arch=amd64 signed-by=/etc/apt/keyrings/vivaldi-archive-keyring.gpg] https://repo.vivaldi.com/archive/deb/ stable main'
+  ansible.builtin.deb822_repository:
+    name: vivaldi
+    types: deb
+    uris: https://repo.vivaldi.com/archive/deb/
+    suites: stable
+    components: [main]
+    architectures: [amd64]
+    signed_by: /etc/apt/keyrings/vivaldi-archive-keyring.gpg
     state: present
-    filename: 'vivaldi'
-    update_cache: true
   when: ansible_os_family == 'Debian'
 
 - name: Установка Vivaldi (apt)

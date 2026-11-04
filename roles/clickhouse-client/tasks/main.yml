@@ -9,25 +9,36 @@
     state: present
   when: ansible_facts['os_family'] == 'Debian'
 
-- name: Add clickhouse key (apt)
-  ansible.builtin.apt_key: 
-    keyserver: "hkp://keyserver.ubuntu.com:80"
-    id: '8919F6BD2B48D754'
-    state: present
+- name: Create APT keyrings directory (apt)
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: '0755'
+  when: ansible_facts['os_family'] == 'Debian'
+
+- name: Download ClickHouse GPG key (apt)
+  ansible.builtin.get_url:
+    url: https://packages.clickhouse.com/CLICKHOUSE-KEY.GPG
+    dest: /etc/apt/keyrings/clickhouse.gpg
+    mode: '0644'
   when: ansible_facts['os_family'] == 'Debian'
 
 - name: Add clickhouse repository (apt)
-  ansible.builtin.apt_repository:
-    repo: 'deb https://packages.clickhouse.com/deb stable main'
+  ansible.builtin.deb822_repository:
+    name: clickhouse
+    types: deb
+    uris: https://packages.clickhouse.com/deb
+    suites: stable
+    components: [main]
+    signed_by: /etc/apt/keyrings/clickhouse.gpg
     state: present
-    filename: 'clickhouse'
-    update_cache: true
   when: ansible_facts['os_family'] == 'Debian'
 
 - name: Update cache (apt)
   ansible.builtin.apt: 
     name: clickhouse-client
     state: present
+    update_cache: true
   when: ansible_facts['os_family'] == 'Debian'
 
 - name: Install clickhouse GPG key (dnf)
