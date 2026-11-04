@@ -56,7 +56,8 @@
     file: clickhouse
     baseurl: 'https://packages.clickhouse.com/rpm/stable/'
     gpgkey: 'https://packages.clickhouse.com/rpm/stable/repodata/repomd.xml.key'
-    gpgcheck: 1
+    # ClickHouse currently publishes the client RPM without a package signature.
+    gpgcheck: false
   when: ansible_facts['os_family'] == 'RedHat'
 
 - name: Install clickhouse-client (dnf) 
