@@ -185,12 +185,14 @@
   become: true
   gather_facts: true
   vars:
+    hashicorp_enabled: false
     hashicorp_packages:
       - terraform
       - packer
       - vault
   roles:
     - role: hashicorp
+      when: hashicorp_enabled | bool
   tags:
     - hashicorp
 

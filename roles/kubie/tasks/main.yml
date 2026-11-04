@@ -7,7 +7,7 @@
       - gnupg
       - lsb-release
     state: present
-  when: ansible_os_family == 'Debian'
+  when: ansible_facts['os_family'] == 'Debian'
 
 - name: Установка зависимостей (dnf)
   ansible.builtin.dnf:
@@ -17,11 +17,11 @@
       - gnupg
       - which
     state: present
-  when: ansible_os_family == 'RedHat'
+  when: ansible_facts['os_family'] == 'RedHat'
 
 - name: Определение последней версии kubie
   ansible.builtin.uri:
-    url: https://api.github.com/repos/kubie-rs/kubie/releases/latest
+    url: https://api.github.com/repos/kubie-org/kubie/releases/latest
     return_content: true
   register: kubie_latest_release
   when: (kubie_version is not defined) or (kubie_version | length == 0)

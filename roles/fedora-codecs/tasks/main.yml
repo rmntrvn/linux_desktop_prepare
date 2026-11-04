@@ -2,8 +2,8 @@
 - name: Проверка Fedora 45
   ansible.builtin.assert:
     that:
-      - ansible_distribution == 'Fedora'
-      - ansible_distribution_major_version == '45'
+      - ansible_facts['distribution'] == 'Fedora'
+      - ansible_facts['distribution_major_version'] == '45'
     fail_msg: "Роль fedora-codecs предназначена только для Fedora 45."
 
 - name: Проверка репозитория Cisco OpenH264
@@ -33,9 +33,10 @@
 
 - name: Установка RPM Fusion Free
   ansible.builtin.dnf:
-    name: "https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-{{ ansible_distribution_major_version }}.noarch.rpm"
+    name: "https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-{{ ansible_facts['distribution_major_version'] }}.noarch.rpm"
     state: present
-    disable_gpg_check: false
+    # The release RPM bootstraps the repository key and cannot be verified before installation.
+    disable_gpg_check: true
   when: fedora_codecs_install_rpmfusion_free
 
 - name: Установка свободных мультимедийных кодеков
