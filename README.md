@@ -36,9 +36,10 @@ ansible-playbook -i inventory.yml playbook.yml --tags dnf-optimization --ask-bec
 На Fedora 45 playbook отключает Cisco OpenH264, удаляет его плагины и
 устанавливает свободный мультимедийный стек через RPM Fusion Free.
 
-По умолчанию WireProxy устанавливается как бинарный файл, но его systemd-служба
-включается только при переданном непустом `wireproxy_config_file` и
-`wireproxy_custom_config: true`.
+По умолчанию WireProxy устанавливается как бинарный файл и получает systemd-unit
+из upstream-репозитория. Служба включается только при переданном непустом
+`wireproxy_config_file` и `wireproxy_custom_config: true`. Кастомный unit можно
+передать содержимым переменной `wireproxy_systemd_config`.
 
 Роль `opencode` устанавливает OpenCode и codebase-memory-mcp для пользователя,
 запустившего playbook через `sudo`. MCP-сервер автоматически добавляется в

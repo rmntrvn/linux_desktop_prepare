@@ -45,12 +45,27 @@
     remote_src: true
   when: not ansible_check_mode
 
-- name: Установка wireproxy-awg в /usr/local/bin
+- name: Создание каталога установки wireproxy
+  ansible.builtin.file:
+    path: /opt/wireproxy
+    state: directory
+    mode: '0755'
+  when: not ansible_check_mode
+
+- name: Установка wireproxy в /opt/wireproxy
   ansible.builtin.copy:
     src: /tmp/wireproxy
-    dest: /usr/local/bin/wireproxy-awg
+    dest: /opt/wireproxy/wireproxy
     remote_src: true
     mode: '0755'
+  when: not ansible_check_mode
+
+- name: Создание совместимого пути для wireproxy-awg
+  ansible.builtin.file:
+    src: /opt/wireproxy/wireproxy
+    dest: /usr/local/bin/wireproxy-awg
+    state: link
+    force: true
   when: not ansible_check_mode
 
 - name: Очистка временных файлов
@@ -84,14 +99,21 @@
     state: directory
     mode: '0755'
 
-- name: Копирование systemd unit файла
-  ansible.builtin.template:
-    src: wireproxy.service.j2
+- name: Установка systemd unit wireproxy по умолчанию
+  ansible.builtin.get_url:
+    url: "{{ wireproxy_systemd_unit_url }}"
     dest: /etc/systemd/system/wireproxy.service
     mode: '0644'
   when:
-    - wireproxy_custom_config | default(false)
-    - wireproxy_config_file | default('') | length > 0
+    - wireproxy_systemd_config | default('') | length == 0
+
+- name: Установка кастомного systemd unit wireproxy
+  ansible.builtin.copy:
+    content: "{{ wireproxy_systemd_config }}\n"
+    dest: /etc/systemd/system/wireproxy.service
+    mode: '0644'
+  when:
+    - wireproxy_systemd_config | default('') | length > 0
 
 - name: Перезагрузка systemd и включение службы
   ansible.builtin.systemd:
