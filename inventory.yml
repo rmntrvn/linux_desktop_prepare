@@ -1,11 +1,5 @@
-localhost:
+all:
   hosts:
-    r1-laptop:
-      ansible_host: 192.168.1.136
-      ansible_user: roman
-      ansible_connection: ssh
-      ansible_ssh_common_args: >-
-        -o IdentitiesOnly=yes -o PubkeyAuthentication=no -o PreferredAuthentications=password
-      ansible_password: "{{ lookup('env', 'ANSIBLE_SSH_PASSWORD') }}"
+    localhost:
+      ansible_connection: local
       ansible_become_password: "{{ lookup('env', 'ANSIBLE_BECOME_PASSWORD') }}"
-      ansible_python_interpreter: /usr/bin/python3
