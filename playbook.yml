@@ -119,6 +119,8 @@
     wireproxy_config_file: ""
   roles:
     - role: wireproxy-awg
+  tags:
+    - wireproxy-awg
 
 - name: Install VS Code
   hosts: localhost
