@@ -97,8 +97,10 @@
         - xclip
   roles:
     - role: install-packages
+    - role: disable-suspend
   tags:
     - install-packages
+    - disable-suspend
 
 - name: Set hostname
   hosts: localhost

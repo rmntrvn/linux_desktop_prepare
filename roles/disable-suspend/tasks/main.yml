@@ -1,0 +1,12 @@
+---
+- name: Disable automatic suspend in systemd-logind
+  ansible.builtin.copy:
+    dest: /etc/systemd/logind.conf.d/disable-suspend.conf
+    content: "{{ disable_suspend_logind_config }}\n"
+    owner: root
+    group: root
+    mode: '0644'
+  when:
+    - ansible_service_mgr == 'systemd'
+    - ansible_os_family in ['Debian', 'RedHat']
+  notify: Restart systemd-logind

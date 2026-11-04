@@ -53,4 +53,6 @@
     name: "https://dbeaver.io/files/dbeaver-ce-latest-stable.x86_64.rpm"
     state: present
     update_cache: true
+    # The vendor RPM is currently published without an OpenPGP signature.
+    disable_gpg_check: true
   when: ansible_facts['os_family'] == 'RedHat'
