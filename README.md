@@ -20,6 +20,14 @@ ansible-galaxy install -r requirements.yml
 ansible-playbook -i inventory.yml playbook.yml --ask-become-pass
 ```
 
+Для удалённого хоста из `inventory.yml` задайте пароли через окружение, не
+сохраняя их в Git:
+```
+export ANSIBLE_SSH_PASSWORD='пароль SSH'
+export ANSIBLE_BECOME_PASSWORD='пароль sudo'
+ansible-playbook -i inventory.yml playbook.yml
+```
+
 Для запуска отдельной части используйте tags, например:
 ```
 ansible-playbook -i inventory.yml playbook.yml --tags dnf-optimization --ask-become-pass
