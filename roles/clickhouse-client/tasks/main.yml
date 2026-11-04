@@ -64,4 +64,6 @@
     name: clickhouse-client
     state: present
     update_cache: true
+    # ClickHouse currently publishes this RPM without an OpenPGP signature.
+    disable_gpg_check: true
   when: ansible_facts['os_family'] == 'RedHat'
