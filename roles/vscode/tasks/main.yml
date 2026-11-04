@@ -1,13 +1,23 @@
 ---
 
-- name: Install dependencies
-  ansible.builtin.package:
+- name: Install dependencies (apt)
+  ansible.builtin.apt:
     name:
       - gpg
       - wget
       - apt-transport-https
+    update_cache: true
+    state: present
+  when: ansible_facts['os_family'] == 'Debian'
+
+- name: Install dependencies (dnf)
+  ansible.builtin.dnf:
+    name:
+      - gnupg2
+      - wget
     update_cache: yes
     state: present
+  when: ansible_facts['os_family'] == 'RedHat'
 
 - name: Create APT keyrings dir (apt)
   ansible.builtin.file:

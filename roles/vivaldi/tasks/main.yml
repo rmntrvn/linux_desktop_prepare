@@ -1,0 +1,70 @@
+---
+- name: Установка зависимостей (apt)
+  ansible.builtin.apt:
+    name:
+      - apt-transport-https
+      - ca-certificates
+      - dirmngr
+    state: present
+  when: ansible_os_family == 'Debian'
+
+- name: Установка зависимостей (dnf)
+  ansible.builtin.dnf:
+    name:
+      - ca-certificates
+      - dnf-plugins-core
+    state: present
+  when: ansible_os_family == 'RedHat'
+
+- name: Создание директории для ключей (apt)
+  ansible.builtin.file:
+    path: '/etc/apt/keyrings'
+    state: directory
+    mode: 'u=rwx,go=rx'
+  when: ansible_os_family == 'Debian'
+
+- name: Установка ключа GPG Vivaldi (apt)
+  ansible.builtin.get_url:
+    url: 'https://repo.vivaldi.com/archive/linux_signing_key.pub'
+    dest: '/etc/apt/keyrings/vivaldi-archive-keyring.gpg'
+    mode: 'u=rw,go=r'
+    force: yes
+  when: ansible_os_family == 'Debian'
+
+- name: Добавление репозитория Vivaldi (apt)
+  ansible.builtin.apt_repository:
+    repo: 'deb [arch=amd64 signed-by=/etc/apt/keyrings/vivaldi-archive-keyring.gpg] https://repo.vivaldi.com/archive/deb/ stable main'
+    state: present
+    filename: 'vivaldi'
+    update_cache: true
+  when: ansible_os_family == 'Debian'
+
+- name: Установка Vivaldi (apt)
+  ansible.builtin.apt:
+    name: vivaldi-stable
+    state: present
+    update_cache: true
+  when: ansible_os_family == 'Debian'
+
+- name: Установка ключа GPG Vivaldi (dnf)
+  ansible.builtin.rpm_key:
+    key: 'https://repo.vivaldi.com/archive/linux_signing_key.pub'
+    state: present
+  when: ansible_os_family == 'RedHat'
+
+- name: Добавление репозитория Vivaldi (dnf)
+  ansible.builtin.yum_repository:
+    name: vivaldi
+    description: Vivaldi Repository
+    baseurl: 'https://repo.vivaldi.com/archive/rpm/x86_64'
+    gpgkey: 'https://repo.vivaldi.com/archive/linux_signing_key.pub'
+    gpgcheck: true
+    enabled: true
+    state: present
+  when: ansible_os_family == 'RedHat'
+
+- name: Установка Vivaldi (dnf)
+  ansible.builtin.dnf:
+    name: vivaldi-stable
+    state: present
+  when: ansible_os_family == 'RedHat'

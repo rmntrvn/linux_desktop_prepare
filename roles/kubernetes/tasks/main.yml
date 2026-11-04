@@ -1,34 +1,116 @@
 ---
-
-- name: Install dependencies (apt)
+- name: Установка зависимостей (apt)
   ansible.builtin.apt:
     name:
       - ca-certificates
       - curl
       - apt-transport-https
     state: present
+  when: ansible_os_family == 'Debian'
 
-- name: Create APT keyrings dir (apt)
+- name: Установка зависимостей (dnf)
+  ansible.builtin.dnf:
+    name:
+      - ca-certificates
+      - curl
+    state: present
+  when: ansible_os_family == 'RedHat'
+
+- name: Создание директории для ключей (apt)
   ansible.builtin.file:
     path: '/etc/apt/keyrings'
     state: directory
     mode: 'u=rwx,go=rx'
+  when: ansible_os_family == 'Debian'
 
-- name: Install key (apt)
+- name: Установка ключа GPG (apt)
   ansible.builtin.get_url:
-    url: 'https://packages.cloud.google.com/apt/doc/apt-key.gpg'
-    dest: '/etc/apt/keyrings/kubernetes-archive-keyring.gpg'
+    url: 'https://pkgs.k8s.io/core:/stable:/{{ kubernetes_minor_version }}/deb/Release.key'
+    dest: '/etc/apt/keyrings/kubernetes-apt-keyring.asc'
     mode: 'u=rw,go=r'
     force: yes
+  when: ansible_os_family == 'Debian'
 
-- name: Add kubernetes repository (apt)
+- name: Dearmor ключа Kubernetes (apt)
+  ansible.builtin.command:
+    cmd: gpg --dearmor --yes -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg /etc/apt/keyrings/kubernetes-apt-keyring.asc
+    creates: /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+  when: ansible_os_family == 'Debian'
+
+- name: Добавление репозитория Kubernetes (apt)
   ansible.builtin.apt_repository:
-    repo: 'deb [signed-by=/etc/apt/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main'
+    repo: 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/{{ kubernetes_minor_version }}/deb/ /'
     state: present
     filename: 'kubernetes'
     update_cache: true
+  when: ansible_os_family == 'Debian'
 
-- name: Install terraform packages (apt)
+- name: Установка kubectl (apt)
+  ansible.builtin.apt:
+    name: "kubectl={{ kubectl_version }}"
+    state: present
+    update_cache: true
+  when: 
+    - ansible_os_family == 'Debian'
+    - kubectl_version is defined
+    - kubectl_version | length > 0
+
+- name: Установка kubectl latest (apt)
   ansible.builtin.apt:
     name: kubectl
     state: present
+    update_cache: true
+  when: 
+    - ansible_os_family == 'Debian'
+    - (kubectl_version is not defined) or (kubectl_version | length == 0)
+
+- name: Добавление репозитория Kubernetes (dnf)
+  ansible.builtin.yum_repository:
+    name: kubernetes
+    description: Kubernetes Repository
+    baseurl: 'https://pkgs.k8s.io/core:/stable:/{{ kubernetes_minor_version }}/rpm/'
+    gpgkey: 'https://pkgs.k8s.io/core:/stable:/{{ kubernetes_minor_version }}/rpm/repodata/repomd.xml.key'
+    gpgcheck: true
+    enabled: true
+    state: present
+  when: ansible_os_family == 'RedHat'
+
+- name: Установка kubectl (dnf)
+  ansible.builtin.dnf:
+    name: "kubectl-{{ kubectl_version }}"
+    state: present
+  when: 
+    - ansible_os_family == 'RedHat'
+    - kubectl_version is defined
+    - kubectl_version | length > 0
+
+- name: Установка kubectl latest (dnf)
+  ansible.builtin.dnf:
+    name: kubectl
+    state: present
+  when: 
+    - ansible_os_family == 'RedHat'
+    - (kubectl_version is not defined) or (kubectl_version | length == 0)
+
+- name: Скачивание kubectl plugins
+  ansible.builtin.get_url:
+    url: "{{ item.url }}"
+    dest: "/usr/local/bin/{{ item.name }}"
+    mode: '0755'
+  loop: "{{ kubectl_plugins }}"
+  loop_control:
+    label: "{{ item.name }}"
+  when: item.download | default(true)
+
+- name: Установка kubectl plugins через curl
+  ansible.builtin.shell: |
+    curl -LO "{{ item.url }}" && chmod +x "{{ item.name }}" && mv "{{ item.name }}" /usr/local/bin/
+  args:
+    creates: "/usr/local/bin/{{ item.name }}"
+  loop: "{{ kubectl_plugins }}"
+  loop_control:
+    label: "{{ item.name }}"
+  when: 
+    - not item.download | default(true)
+    - item.url is defined
+    - item.name is defined

@@ -1,0 +1,24 @@
+---
+# Оптимизация DNF для Fedora
+- name: Настройка dnf для ускорения работы
+  ansible.builtin.blockinfile:
+    path: /etc/dnf/dnf.conf
+    create: true
+    mode: '0644'
+    backup: true
+    marker: "# {mark} ANSIBLE MANAGED DNF OPTIMIZATION"
+    insertafter: '^\[main\]'
+    block: |
+      fastestmirror={{ dnf_fastest_mirror | default(true) | lower }}
+      max_parallel_downloads={{ dnf_max_parallel_downloads | default(10) }}
+      keepcache={{ dnf_keepcache | default(true) | lower }}
+      metadata_expire={{ dnf_metadata_expire | default(86400) }}
+      timeout={{ dnf_timeout | default(30) }}
+      minrate=1k
+      installonly_limit=3
+      clean_requirements_on_remove=True
+      best=True
+      skip_if_unavailable=True
+  when: ansible_os_family == 'RedHat'
+  notify:
+    - rebuild dnf cache

@@ -1,0 +1,30 @@
+# kubie configuration file
+# https://github.com/kubie-rs/kubie
+
+# Base directory where kubie looks for kubeconfig files.
+# Default: ~/.kube
+#kubeconfig_dir: "/home/{{ kubie_user }}/.kube"
+
+# Directory where kubie stores its cache.
+# Default: ~/.cache/kubie
+#cache_dir: "/home/{{ kubie_user }}/.cache/kubie"
+
+# Shell integration. Valid options are: "zsh", "bash", "none".
+# Default: "zsh"
+shell_integration: zsh
+
+# Default context to use when kubie is invoked without arguments.
+# Default: (none)
+#default_context: ""
+
+# Default namespace to use when kubie is invoked without arguments.
+# Default: (none)
+#default_namespace: ""
+
+# Prompt format. The following placeholders are available:
+# - {context}: The current context name
+# - {namespace}: The current namespace
+# - {user}: The current user name
+# - {cluster}: The current cluster name
+# Default: "{context}/{namespace}"
+#prompt_format: "{context}/{namespace}"

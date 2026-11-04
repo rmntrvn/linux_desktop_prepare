@@ -7,17 +7,16 @@
   vars:
     generic_package_names:
       RedHat:
-        - apt-transport-https
         - ca-certificates
         - cups
         - curl
-        - gnupg2-dirmngr
         - dmidecode
+        - fastfetch
         - filezilla
         - fping
         - gimp
-        - git-all
-        - gnupg
+        - git
+        - gnupg2
         - htop
         - inkscape
         - iperf3
@@ -28,6 +27,29 @@
         - net-tools
         - nmap
         - obs-studio
+        - openconnect
+        - pavucontrol
+        - peek
+        - postgresql
+        - pwgen
+        - qbittorrent
+        - remmina
+        - s3cmd
+        - shadowsocks-libev
+        - simplescreenrecorder
+        - sshpass
+        - tcpdump
+        - telnet
+        - testdisk
+        - thunderbird
+        - vim-enhanced
+        - vlc
+        - vokoscreenNG
+        - wget
+        - whois
+        - wireguard-tools
+         - wireshark-qt
+         - xclip
       Debian:
         - apt-transport-https
         - ca-certificates
@@ -73,11 +95,30 @@
         - wget
         - whois
         - wireguard
-        - wireshark
+         - wireshark
+         - xclip
   roles:
     - role: install-packages
   tags:
     - install-packages
+
+- name: Set hostname
+  hosts: localhost
+  become: true
+  gather_facts: true
+  roles:
+    - role: hostname
+  tags:
+    - hostname
+
+- name: Install wireproxy-awg
+  hosts: localhost
+  become: true
+  gather_facts: true
+  vars:
+    wireproxy_config_file: ""
+  roles:
+    - role: wireproxy-awg
 
 - name: Install VS Code
   hosts: localhost
@@ -85,13 +126,6 @@
   gather_facts: true
   roles:
     - role: vscode
-
-- name: Install docker
-  hosts: localhost
-  become: true
-  gather_facts: true
-  roles:
-    - role: docker
 
 - name: Install dbeaver
   hosts: localhost
@@ -105,7 +139,29 @@
   become: true
   gather_facts: true
   roles:
-    - role: clickhouse
+    - role: clickhouse-client
+
+- name: Optimize dnf for Fedora
+  hosts: localhost
+  become: true
+  gather_facts: true
+  tasks:
+    - ansible.builtin.include_role:
+        name: dnf-optimization
+      when: ansible_facts['os_family'] == 'RedHat' and ansible_facts['distribution'] == 'Fedora'
+  tags:
+    - dnf-optimization
+
+- name: Configure Fedora free codecs
+  hosts: localhost
+  become: true
+  gather_facts: true
+  tasks:
+    - ansible.builtin.include_role:
+        name: fedora-codecs
+      when: ansible_facts['distribution'] == 'Fedora'
+  tags:
+    - fedora-codecs
 
 - name: Install sublime-text
   hosts: localhost
@@ -114,17 +170,15 @@
   roles:
     - role: sublime-text
 
-- name: Install virtual-box
+- name: Install hashicorp
   hosts: localhost
   become: true
   gather_facts: true
-  roles:
-    - role: virtual-box
-
-- name: Install hashicorp terraform
-  hosts: localhost
-  become: true
-  gather_facts: true
+  vars:
+    hashicorp_packages:
+      - terraform
+      - packer
+      - vault
   roles:
     - role: hashicorp
 
@@ -146,20 +200,77 @@
   hosts: localhost
   become: true
   gather_facts: true
+  vars:
+    zsh_theme: ys
+    zsh_plugins:
+      - git
+      - zsh-syntax-highlighting
+      - zsh-autosuggestions
+      - fzf
   roles:
-    - role: gantsign.oh-my-zsh
-      users:
-        - username: rmntrvn
-          oh_my_zsh:
-            install: yes
-            theme: ys
-            plugins:
-              - git
-              - gcloud
-              - vagrant
-              - terraform
-              - kubectl
-              - helm
-              # - zsh-syntax-highlighting
-              # - zsh-autosuggestions
-              - vault
+    - role: zsh
+
+- name: Install kubie
+  hosts: localhost
+  become: true
+  gather_facts: true
+  vars:
+    kubie_config_file: |
+      ""
+  roles:
+    - role: kubie
+
+- name: Install Vivaldi browser
+  hosts: localhost
+  become: true
+  gather_facts: true
+  roles:
+    - role: vivaldi
+
+- name: Install Time Messenger
+  hosts: localhost
+  become: true
+  gather_facts: true
+  roles:
+    - role: time-messenger
+
+- name: Install flathub packages
+  hosts: localhost
+  become: true
+  gather_facts: true
+  vars:
+    flatpak_packages:
+      - org.telegram.desktop
+  roles:
+    - role: flathub
+
+- name: Install Tailscale client
+  hosts: localhost
+  become: true
+  gather_facts: true
+  vars:
+    tailscale_version: ""
+  roles:
+    - role: tailscale
+
+- name: Install Docker/Podman
+  hosts: localhost
+  become: true
+  gather_facts: true
+  vars:
+    docker_version: ""
+    docker_user: "{{ ansible_env.SUDO_USER | default(lookup('env', 'USER')) | default('rmntrvn') }}"
+  roles:
+    - role: containers
+
+- name: Install OpenCode and codebase-memory-mcp
+  hosts: localhost
+  become: true
+  gather_facts: true
+  vars:
+    opencode_user: "{{ ansible_env.SUDO_USER | default(lookup('env', 'USER')) | default('rmntrvn') }}"
+  roles:
+    - role: opencode
+  tags:
+    - opencode
+    - codebase-memory-mcp

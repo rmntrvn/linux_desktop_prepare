@@ -1,16 +1,44 @@
-# Подготовка desktop дистрибутива Linux на основе apt пакетного менеджера для работы DevOps инженера
+# Подготовка Linux Desktop для DevOps-инженера
 
-1. Предварительно установить ansible:
+Проект автоматизирует установку рабочего окружения на Ubuntu 26.04 и Fedora 45.
+Playbook запускается локально на подготовляемом компьютере.
+
+## Установка
+
+1. Установить Ansible:
 ```
-sudo apt install ansible -y
+sudo apt install ansible -y       # Ubuntu
+# Для Fedora: sudo dnf install ansible -y
 ```
-2. Установить зависимые роли:
+2. Установить роли и коллекции:
 ```
 ansible-galaxy install -r requirements.yml
 ```
-3. Запустить плейбук:
+3. Проверить inventory и, при необходимости, задать переменные в `-e` или inventory.
+4. Запустить playbook для Ubuntu или Fedora:
 ```
-ansible-playbook -i inventory -e '@password.yml' --vault-password-file=vault.txt playbook.yml
+ansible-playbook -i inventory.yml playbook.yml --ask-become-pass
+# Fedora допускает тот же playbook или явный Fedora-вход:
+ansible-playbook -i inventory.yml playbook-fedora.yml --ask-become-pass
+```
+
+Для запуска отдельной части используйте tags, например:
+```
+ansible-playbook -i inventory.yml playbook.yml --tags dnf-optimization --ask-become-pass
+```
+
+На Fedora 45 playbook отключает Cisco OpenH264, удаляет его плагины и
+устанавливает свободный мультимедийный стек через RPM Fusion Free.
+
+По умолчанию WireProxy устанавливается как бинарный файл, но его systemd-служба
+включается только при переданном непустом `wireproxy_config_file` и
+`wireproxy_custom_config: true`.
+
+Роль `opencode` устанавливает OpenCode и codebase-memory-mcp для пользователя,
+запустившего playbook через `sudo`. MCP-сервер автоматически добавляется в
+глобальную конфигурацию OpenCode. Запустить только эту роль можно так:
+```
+ansible-playbook -i inventory.yml playbook.yml --tags opencode --ask-become-pass
 ```
 
 ## TODO:
@@ -27,4 +55,4 @@ ansible-playbook -i inventory -e '@password.yml' --vault-password-file=vault.txt
 
 - [ ] Вынести в отдельную роль установку vscode в установкой плагинов и других настроек.
 
-- [ ] Вынести переменные в отдельны файл.
+- [ ] Вынести переменные в отдельный файл.

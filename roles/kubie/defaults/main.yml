@@ -1,0 +1,7 @@
+---
+kubie_version: ""
+# Целевой пользователь (не root)
+kubie_user: "{{ ansible_env.SUDO_USER | default(lookup('env', 'USER')) | default('rmntrvn') }}"
+kubie_config_dir: "/home/{{ kubie_user }}/.kube"
+kubie_custom_config: false
+kubie_config_file: ""

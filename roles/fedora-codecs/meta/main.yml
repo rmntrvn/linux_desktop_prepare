@@ -1,0 +1,16 @@
+---
+galaxy_info:
+  author: linux_desktop_prepare
+  description: Настройка свободных мультимедийных кодеков для Fedora 45
+  license: MIT
+  min_ansible_version: "2.14"
+  platforms:
+    - name: Fedora
+      versions:
+        - "45"
+  galaxy_tags:
+    - fedora
+    - codecs
+    - multimedia
+
+dependencies: []

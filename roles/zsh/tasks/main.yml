@@ -1,0 +1,80 @@
+---
+- name: Установка zsh и git (apt)
+  ansible.builtin.apt:
+    name:
+      - zsh
+      - git
+    state: present
+    update_cache: true
+  when: ansible_os_family == 'Debian'
+
+- name: Установка zsh и git (dnf)
+  ansible.builtin.dnf:
+    name:
+      - zsh
+      - git
+    state: present
+  when: ansible_os_family == 'RedHat'
+
+- name: Установка плагинов zsh (apt)
+  ansible.builtin.apt:
+    name: "{{ zsh_packages }}"
+    state: present
+  when: ansible_os_family == 'Debian'
+
+- name: Установка плагинов zsh (dnf)
+  ansible.builtin.dnf:
+    name: "{{ zsh_packages }}"
+    state: present
+  when: ansible_os_family == 'RedHat'
+
+- name: Клонирование oh-my-zsh
+  ansible.builtin.git:
+    repo: https://github.com/ohmyzsh/ohmyzsh.git
+    dest: "{{ zsh_home }}/.oh-my-zsh"
+    version: master
+    depth: 1
+  become: true
+  become_user: "{{ zsh_user }}"
+
+- name: Создание директории для плагинов и тем oh-my-zsh
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ zsh_user }}"
+    group: "{{ zsh_user }}"
+    mode: '0755'
+  loop:
+    - "{{ zsh_home }}/.oh-my-zsh/custom/plugins"
+    - "{{ zsh_home }}/.oh-my-zsh/custom/themes"
+
+- name: Клонирование плагина zsh-syntax-highlighting
+  ansible.builtin.git:
+    repo: https://github.com/zsh-users/zsh-syntax-highlighting.git
+    dest: "{{ zsh_home }}/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting"
+    version: "{{ zsh_syntax_highlighting_version }}"
+  become: true
+  become_user: "{{ zsh_user }}"
+  when: zsh_syntax_highlighting | default(true)
+
+- name: Клонирование плагина zsh-autosuggestions
+  ansible.builtin.git:
+    repo: https://github.com/zsh-users/zsh-autosuggestions.git
+    dest: "{{ zsh_home }}/.oh-my-zsh/custom/plugins/zsh-autosuggestions"
+    version: "{{ zsh_autosuggestions_version }}"
+  become: true
+  become_user: "{{ zsh_user }}"
+  when: zsh_autosuggestions | default(true)
+
+- name: Настройка .zshrc (тема и плагины)
+  ansible.builtin.template:
+    src: zshrc.j2
+    dest: "{{ zsh_home }}/.zshrc"
+    owner: "{{ zsh_user }}"
+    group: "{{ zsh_user }}"
+    mode: '0644'
+
+- name: Установка zsh как оболочки по умолчанию для пользователя
+  ansible.builtin.user:
+    name: "{{ zsh_user }}"
+    shell: /bin/zsh

@@ -1,0 +1,30 @@
+#
+# Examples of how to write .zshrc
+# http://zsh.sourceforge.net/Doc/Release/Configuration-Files.html
+#
+# System-wide configuration file for zsh
+
+# Path to your oh-my-zsh installation.
+export ZSH="{{ zsh_home }}/.oh-my-zsh"
+
+# Set name of the theme to load.
+# Look in {{ zsh_home }}/.oh-my-zsh/themes/
+# Optionally, if you set this to "random", it'll load a random theme each
+# time that oh-my-zsh is loaded.
+ZSH_THEME="{{ zsh_theme }}"
+
+# Example aliases
+# alias zshconfig="mate ~/.zshrc"
+# alias ohmyzsh="mate ~/.oh-my-zsh"
+
+# Set list of plugins to load
+# http:// oh-my-zsh.github.io/oh-my-zsh/plugins.html
+# Install extra plugins:
+# cd {{ zsh_home }}/.oh-my-zsh/custom/plugins
+# git clone git://github.com/zsh-users/zsh-syntax-highlighting.git
+plugins=( {% for plugin in zsh_plugins %}{{ plugin }}{% if not loop.last %} {% endif %}{% endfor %} )
+
+# source oh-my-zsh
+source "{{ zsh_home }}/.oh-my-zsh/oh-my-zsh.sh"
+
+# User configuration

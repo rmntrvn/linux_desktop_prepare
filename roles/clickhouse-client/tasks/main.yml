@@ -30,14 +30,21 @@
     state: present
   when: ansible_facts['os_family'] == 'Debian'
 
+- name: Install clickhouse GPG key (dnf)
+  ansible.builtin.rpm_key:
+    key: 'https://packages.clickhouse.com/rpm/stable/repodata/repomd.xml.key'
+    state: present
+  when: ansible_facts['os_family'] == 'RedHat'
+
 - name: Install clickhouse repo (dnf)
   become: true
   ansible.builtin.yum_repository:
     name: 'clickhouse'
-    description: Clickhouse
+    description: ClickHouse - Stable Repository
     enabled: true
-    file: vscode
-    baseurl: 'https://packages.clickhouse.com/rpm/clickhouse.repo'
+    file: clickhouse
+    baseurl: 'https://packages.clickhouse.com/rpm/stable/'
+    gpgkey: 'https://packages.clickhouse.com/rpm/stable/repodata/repomd.xml.key'
     gpgcheck: 1
   when: ansible_facts['os_family'] == 'RedHat'
 

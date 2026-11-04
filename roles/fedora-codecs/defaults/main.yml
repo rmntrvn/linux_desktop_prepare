@@ -1,0 +1,11 @@
+---
+fedora_codecs_disable_cisco_openh264: true
+fedora_codecs_remove_cisco_packages: true
+fedora_codecs_install_rpmfusion_free: true
+
+fedora_codecs_packages:
+  - ffmpeg-free
+  - gstreamer1-plugins-base
+  - gstreamer1-plugins-good
+  - gstreamer1-plugins-bad-free
+  - gstreamer1-libav

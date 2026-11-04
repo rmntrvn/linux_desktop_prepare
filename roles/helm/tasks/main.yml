@@ -1,34 +1,106 @@
 ---
-
-- name: Install dependencies (apt)
+- name: Установка зависимостей (apt)
   ansible.builtin.apt:
     name:
       - ca-certificates
       - curl
       - apt-transport-https
     state: present
+  when: ansible_os_family == 'Debian'
 
-- name: Create APT keyrings dir (apt)
+- name: Установка зависимостей (dnf)
+  ansible.builtin.dnf:
+    name:
+      - ca-certificates
+      - curl
+    state: present
+  when: ansible_os_family == 'RedHat'
+
+- name: Создание директории для ключей (apt)
   ansible.builtin.file:
     path: '/etc/apt/keyrings'
     state: directory
     mode: 'u=rwx,go=rx'
+  when: ansible_os_family == 'Debian'
 
-- name: Install key (apt)
+- name: Установка ключа GPG (apt)
   ansible.builtin.get_url:
     url: 'https://baltocdn.com/helm/signing.asc'
     dest: '/etc/apt/keyrings/helm.gpg'
     mode: 'u=rw,go=r'
     force: yes
+  when: ansible_os_family == 'Debian'
 
-- name: Add helm repository (apt)
+- name: Добавление репозитория Helm (apt)
   ansible.builtin.apt_repository:
     repo: 'deb [arch=amd64 signed-by=/etc/apt/keyrings/helm.gpg] https://baltocdn.com/helm/stable/debian/ all main'
     state: present
     filename: 'helm'
     update_cache: true
+  when: ansible_os_family == 'Debian'
 
-- name: Install terraform packages (apt)
+- name: Установка Helm (apt)
+  ansible.builtin.apt:
+    name: "helm={{ helm_version }}"
+    state: present
+    update_cache: true
+  when: 
+    - ansible_os_family == 'Debian'
+    - helm_version is defined
+    - helm_version | length > 0
+
+- name: Установка Helm latest (apt)
   ansible.builtin.apt:
     name: helm
     state: present
+    update_cache: true
+  when: 
+    - ansible_os_family == 'Debian'
+    - (helm_version is not defined) or (helm_version | length == 0)
+
+- name: Определение последней версии Helm (Fedora)
+  ansible.builtin.uri:
+    url: https://api.github.com/repos/helm/helm/releases/latest
+    return_content: true
+  register: helm_latest_release
+  when:
+    - ansible_os_family == 'RedHat'
+    - (helm_version is not defined) or (helm_version | length == 0)
+
+- name: Установка версии Helm из latest release (Fedora)
+  ansible.builtin.set_fact:
+    helm_version: "{{ (helm_latest_release.content | from_json).tag_name | replace('v', '') }}"
+  when:
+    - ansible_os_family == 'RedHat'
+    - (helm_version is not defined) or (helm_version | length == 0)
+
+- name: Скачивание архива Helm (Fedora)
+  ansible.builtin.get_url:
+    url: "https://get.helm.sh/helm-v{{ helm_version }}-linux-amd64.tar.gz"
+    dest: "/tmp/helm-v{{ helm_version }}-linux-amd64.tar.gz"
+    mode: '0644'
+  when: ansible_os_family == 'RedHat'
+
+- name: Распаковка Helm (Fedora)
+  ansible.builtin.unarchive:
+    src: "/tmp/helm-v{{ helm_version }}-linux-amd64.tar.gz"
+    dest: /tmp
+    remote_src: true
+  when: ansible_os_family == 'RedHat'
+
+- name: Установка бинарного файла Helm в /usr/local/bin (Fedora)
+  ansible.builtin.copy:
+    src: /tmp/linux-amd64/helm
+    dest: /usr/local/bin/helm
+    remote_src: true
+    mode: '0755'
+  when: ansible_os_family == 'RedHat'
+
+- name: Очистка временных файлов Helm (Fedora)
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - "/tmp/helm-v{{ helm_version }}-linux-amd64.tar.gz"
+    - /tmp/linux-amd64
+  when: ansible_os_family == 'RedHat'

@@ -1,1 +1,7 @@
-- src: gantsign.oh-my-zsh
+---
+roles:
+  - src: gantsign.oh-my-zsh
+
+collections:
+  - name: community.general
+  - name: ansible.posix

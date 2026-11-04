@@ -1,0 +1,120 @@
+---
+- name: Установка зависимостей для Ubuntu (docker)
+  ansible.builtin.apt:
+    name:
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - gnupg
+      - lsb-release
+    state: present
+    update_cache: true
+  when:
+    - ansible_os_family == 'Debian'
+
+- name: Установка зависимостей для Fedora (podman)
+  ansible.builtin.dnf:
+    name:
+      - dnf-plugins-core
+    state: present
+  when:
+    - ansible_os_family == 'RedHat'
+    - ansible_distribution == 'Fedora'
+
+- name: Создание директории для ключей (Ubuntu)
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: '0755'
+  when:
+    - ansible_os_family == 'Debian'
+
+- name: Скачивание GPG ключа Docker (Ubuntu)
+  ansible.builtin.get_url:
+    url: https://download.docker.com/linux/ubuntu/gpg
+    dest: /etc/apt/keyrings/docker.asc
+    mode: '0644'
+    force: yes
+  when:
+    - ansible_os_family == 'Debian'
+
+- name: Dearmor GPG ключа Docker (Ubuntu)
+  ansible.builtin.command:
+    cmd: gpg --dearmor --yes -o /etc/apt/keyrings/docker.gpg /etc/apt/keyrings/docker.asc
+    creates: /etc/apt/keyrings/docker.gpg
+  when:
+    - ansible_os_family == 'Debian'
+
+- name: Добавление репозитория Docker (Ubuntu)
+  ansible.builtin.apt_repository:
+    repo: "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
+    state: present
+    filename: docker
+    update_cache: true
+  when:
+    - ansible_os_family == 'Debian'
+
+- name: Добавление GPG ключа Podman (Fedora)
+  ansible.builtin.rpm_key:
+    key: https://keys.fedoraproject.org/RPM-GPG-KEY-fedora-primary
+    state: present
+    mode: '0644'
+  when:
+    - ansible_os_family == 'RedHat'
+    - ansible_distribution == 'Fedora'
+
+- name: Установка Docker (Ubuntu)
+  ansible.builtin.apt:
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - docker-buildx-plugin
+      - docker-compose-plugin
+    state: present
+    update_cache: true
+  when:
+    - ansible_os_family == 'Debian'
+
+- name: Установка Podman (Fedora)
+  ansible.builtin.dnf:
+    name:
+      - podman
+      - podman-docker
+    state: present
+  when:
+    - ansible_os_family == 'RedHat'
+    - ansible_distribution == 'Fedora'
+
+- name: Создание группы docker (Ubuntu)
+  ansible.builtin.group:
+    name: docker
+    state: present
+  when:
+    - ansible_os_family == 'Debian'
+
+- name: Добавление пользователя в группу docker (Ubuntu)
+  ansible.builtin.user:
+    name: "{{ docker_user }}"
+    groups: docker
+    append: yes
+  when:
+    - ansible_os_family == 'Debian'
+
+- name: Запуск и включение службы docker (Ubuntu)
+  ansible.builtin.systemd:
+    name: docker
+    state: started
+    enabled: true
+  when:
+    - ansible_os_family == 'Debian'
+
+- name: Проверка установки Docker/Podman
+  ansible.builtin.command: "{{ 'docker --version' if ansible_os_family == 'Debian' else 'podman --version' }}"
+  register: container_runtime_version
+  changed_when: false
+  failed_when: false
+
+- name: Вывод установленного контейнерного рантайма
+  ansible.builtin.debug:
+    msg: "Установлен {{ 'Docker' if ansible_os_family == 'Debian' else 'Podman' }}: {{ container_runtime_version.stdout | default('Не удалось определить') }}"

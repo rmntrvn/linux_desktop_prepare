@@ -1,0 +1,150 @@
+---
+- name: Установка зависимостей (apt)
+  ansible.builtin.apt:
+    name:
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - gnupg
+      - software-properties-common
+    state: present
+    update_cache: true
+  when: ansible_os_family == 'Debian'
+
+- name: Установка зависимостей (dnf)
+  ansible.builtin.dnf:
+    name:
+      - dnf-plugins-core
+      - ca-certificates
+      - curl
+      - gnupg
+    state: present
+  when: ansible_os_family == 'RedHat'
+
+- name: Добавление GPG ключа Tailscale (apt)
+  ansible.builtin.apt_key:
+    url: https://pkgs.tailscale.com/stable/tailscale-archive-keyring.gpg
+    state: present
+  when: ansible_os_family == 'Debian'
+
+- name: Добавление репозитория Tailscale (Ubuntu)
+  ansible.builtin.apt_repository:
+    repo: "deb https://pkgs.tailscale.com/stable/ubuntu {{ ansible_distribution_release }} main"
+    state: present
+    filename: tailscale
+    update_cache: true
+  when:
+    - ansible_os_family == 'Debian'
+    - ansible_distribution == 'Ubuntu'
+
+- name: Добавление GPG ключа Tailscale (dnf)
+  ansible.builtin.rpm_key:
+    key: https://pkgs.tailscale.com/stable/tailscale-archive-keyring.gpg
+    state: present
+  when: ansible_os_family == 'RedHat'
+
+- name: Добавление репозитория Tailscale (Fedora)
+  ansible.builtin.yum_repository:
+    name: tailscale
+    description: Tailscale Repository
+    baseurl: https://pkgs.tailscale.com/stable/fedora/$releasever/$basearch
+    gpgkey: https://pkgs.tailscale.com/stable/tailscale-archive-keyring.gpg
+    gpgcheck: true
+    enabled: true
+    state: present
+  when:
+    - ansible_os_family == 'RedHat'
+    - ansible_distribution == 'Fedora'
+
+- name: Получение информации о релизе Tailscale
+  ansible.builtin.uri:
+    url: https://api.github.com/repos/tailscale/tailscale/releases/latest
+    return_content: true
+  register: tailscale_latest_release
+  when: tailscale_version | default('') | length == 0
+
+- name: Извлечение версии из latest release
+  ansible.builtin.set_fact:
+    tailscale_version: "{{ (tailscale_latest_release.content | from_json).tag_name | replace('v', '') }}"
+  when: tailscale_version | default('') | length == 0
+
+- name: Получение ссылки на deb пакет
+  ansible.builtin.set_fact:
+    tailscale_deb_url: "https://pkgs.tailscale.com/stable/tailscale_{{ tailscale_version }}_amd64.deb"
+  when: ansible_os_family == 'Debian'
+
+- name: Получение ссылки на rpm пакет
+  ansible.builtin.set_fact:
+    tailscale_rpm_url: "https://pkgs.tailscale.com/stable/tailscale-{{ tailscale_version }}-1.x86_64.rpm"
+  when: ansible_os_family == 'RedHat'
+
+- name: Установка Tailscale (apt) через репозиторий
+  ansible.builtin.apt:
+    name: tailscale
+    state: present
+    update_cache: true
+  when:
+    - ansible_os_family == 'Debian'
+    - tailscale_version | default('') | length == 0
+
+- name: Установка Tailscale (dnf) через репозиторий
+  ansible.builtin.dnf:
+    name: tailscale
+    state: present
+  when:
+    - ansible_os_family == 'RedHat'
+    - tailscale_version | default('') | length == 0
+
+- name: Скачивание Tailscale (apt) конкретной версии
+  ansible.builtin.get_url:
+    url: "{{ tailscale_deb_url }}"
+    dest: "/tmp/tailscale_{{ tailscale_version }}_amd64.deb"
+    mode: '0644'
+  when:
+    - ansible_os_family == 'Debian'
+    - tailscale_version | default('') | length > 0
+
+- name: Установка Tailscale (apt) конкретной версии из deb пакета
+  ansible.builtin.apt:
+    deb: "/tmp/tailscale_{{ tailscale_version }}_amd64.deb"
+  when:
+    - ansible_os_family == 'Debian'
+    - tailscale_version | default('') | length > 0
+
+- name: Скачивание Tailscale (dnf) конкретной версии
+  ansible.builtin.get_url:
+    url: "{{ tailscale_rpm_url }}"
+    dest: "/tmp/tailscale-{{ tailscale_version }}-1.x86_64.rpm"
+    mode: '0644'
+  when:
+    - ansible_os_family == 'RedHat'
+    - tailscale_version | default('') | length > 0
+
+- name: Установка Tailscale (dnf) конкретной версии из rpm пакета
+  ansible.builtin.dnf:
+    name: "/tmp/tailscale-{{ tailscale_version }}-1.x86_64.rpm"
+    state: present
+  when:
+    - ansible_os_family == 'RedHat'
+    - tailscale_version | default('') | length > 0
+
+- name: Очистка загруженных пакетов
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - "/tmp/tailscale_{{ tailscale_version }}_amd64.deb"
+    - "/tmp/tailscale-{{ tailscale_version }}-1.x86_64.rpm"
+  when:
+    - tailscale_version | default('') | length > 0
+  failed_when: false
+
+- name: Проверка установленной версии Tailscale
+  ansible.builtin.shell: tailscale version
+  register: tailscale_installed_version
+  changed_when: false
+  failed_when: false
+
+- name: Вывод версии Tailscale
+  ansible.builtin.debug:
+    msg: "Установлена версия Tailscale: {{ tailscale_installed_version.stdout | default('Не удалось определить') }}"

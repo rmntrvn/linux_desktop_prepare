@@ -1,4 +1,31 @@
-- name: Set hostname to host
+---
+- name: Установка желаемого hostname
   ansible.builtin.hostname:
-    name: "{{ inventory_hostname }}"
-  when: inventory_hostname is defined
+    name: "{{ desktop_hostname }}"
+  when: desktop_hostname | default('') | length > 0
+
+- name: Обновление /etc/hostname
+  ansible.builtin.copy:
+    dest: /etc/hostname
+    content: "{{ desktop_hostname }}\n"
+    mode: '0644'
+  when: desktop_hostname | default('') | length > 0
+
+- name: Обновление /etc/hosts для localhost
+  ansible.builtin.lineinfile:
+    path: /etc/hosts
+    regexp: '^127\.0\.1\.1\s'
+    line: "127.0.1.1{{ '\t' }}{{ desktop_hostname }}"
+    create: true
+    mode: '0644'
+    state: present
+  when: desktop_hostname | default('') | length > 0
+
+- name: Перезапуск systemd-hostnamed (если доступен)
+  ansible.builtin.systemd:
+    name: systemd-hostnamed
+    state: restarted
+  when:
+    - desktop_hostname | default('') | length > 0
+    - ansible_service_mgr == 'systemd'
+    - ansible_os_family in ['RedHat', 'Debian']

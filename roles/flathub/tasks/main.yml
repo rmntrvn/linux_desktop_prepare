@@ -1,0 +1,35 @@
+---
+- name: Установка flatpak (apt)
+  ansible.builtin.apt:
+    name:
+      - flatpak
+    state: present
+    update_cache: true
+  when: ansible_os_family == 'Debian'
+
+- name: Установка flatpak (dnf)
+  ansible.builtin.dnf:
+    name: flatpak
+    state: present
+  when: ansible_os_family == 'RedHat'
+
+- name: Добавление репозитория flathub
+  ansible.builtin.command: flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+  args:
+    creates: /var/lib/flatpak/repo/flathub
+  when: ansible_os_family == 'RedHat'
+
+- name: Добавление репозитория flathub (Debian)
+  ansible.builtin.command: flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+  args:
+    creates: /var/lib/flatpak/repo/flathub
+  when: ansible_os_family == 'Debian'
+
+- name: Установка пакетов из flathub
+  community.general.flatpak:
+    name: "{{ item }}"
+    remote: flathub
+    state: present
+  loop: "{{ flatpak_packages }}"
+  loop_control:
+    label: "{{ item }}"

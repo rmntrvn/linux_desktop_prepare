@@ -1,0 +1,99 @@
+---
+- name: Установка зависимостей (apt)
+  ansible.builtin.apt:
+    name:
+      - ca-certificates
+      - curl
+      - iptables
+      - wireguard-tools
+    state: present
+  when: ansible_os_family == 'Debian'
+
+- name: Установка зависимостей (dnf)
+  ansible.builtin.dnf:
+    name:
+      - ca-certificates
+      - curl
+      - iptables
+      - wireguard-tools
+    state: present
+  when: ansible_os_family == 'RedHat'
+
+- name: Получение последнего релиза wireproxy-awg
+  ansible.builtin.uri:
+    url: https://api.github.com/repos/artem-russkikh/wireproxy-awg/releases/latest
+    return_content: true
+  register: wireproxy_latest_release
+  when: wireproxy_version | default('latest') in ['', 'latest']
+
+- name: Определение версии wireproxy-awg
+  ansible.builtin.set_fact:
+    wireproxy_version: "{{ (wireproxy_latest_release.content | from_json).tag_name | replace('v', '') }}"
+  when: wireproxy_version | default('latest') in ['', 'latest']
+
+- name: Скачивание wireproxy-awg
+  ansible.builtin.get_url:
+    url: "https://github.com/artem-russkikh/wireproxy-awg/releases/download/v{{ wireproxy_version }}/wireproxy-awg-linux-amd64.tar.gz"
+    dest: "/tmp/wireproxy-awg-linux-amd64.tar.gz"
+    mode: '0644'
+
+- name: Распаковка wireproxy-awg
+  ansible.builtin.unarchive:
+    src: /tmp/wireproxy-awg-linux-amd64.tar.gz
+    dest: /tmp
+    remote_src: true
+
+- name: Установка wireproxy-awg в /usr/local/bin
+  ansible.builtin.copy:
+    src: /tmp/wireproxy-awg
+    dest: /usr/local/bin/wireproxy-awg
+    remote_src: true
+    mode: '0755'
+
+- name: Очистка временных файлов
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /tmp/wireproxy-awg
+    - /tmp/wireproxy-awg-linux-amd64.tar.gz
+
+- name: Создание директории для конфига wireproxy
+  ansible.builtin.file:
+    path: /etc
+    state: directory
+    mode: '0755'
+
+- name: Копирование кастомного конфига wireproxy.conf
+  ansible.builtin.template:
+    src: wireproxy.conf.j2
+    dest: /etc/wireproxy.conf
+    mode: '0644'
+  when:
+    - wireproxy_custom_config | default(false)
+    - wireproxy_config_file | default('') | length > 0
+
+- name: Создание директории для systemd unit
+  ansible.builtin.file:
+    path: /etc/systemd/system
+    state: directory
+    mode: '0755'
+
+- name: Копирование systemd unit файла
+  ansible.builtin.template:
+    src: wireproxy.service.j2
+    dest: /etc/systemd/system/wireproxy.service
+    mode: '0644'
+  when:
+    - wireproxy_custom_config | default(false)
+    - wireproxy_config_file | default('') | length > 0
+
+- name: Перезагрузка systemd и включение службы
+  ansible.builtin.systemd:
+    name: wireproxy
+    daemon_reload: true
+    enabled: true
+    state: started
+  when:
+    - wireproxy_custom_config | default(false)
+    - wireproxy_config_file | default('') | length > 0

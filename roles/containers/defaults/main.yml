@@ -1,0 +1,8 @@
+---
+# Версия Docker для установки (по умолчанию последняя из репозитория)
+# Для Ubuntu 26.04 используется репозиторий Docker
+docker_version: ""
+
+# Пользователь для добавления в группу docker
+# По умолчанию используется пользователь, вызвавший sudo (не root)
+docker_user: "{{ ansible_env.SUDO_USER | default(lookup('env', 'USER')) | default('rmntrvn') }}"

@@ -1,0 +1,121 @@
+---
+- name: Проверка поддерживаемой операционной системы
+  ansible.builtin.assert:
+    that:
+      - (ansible_distribution == 'Ubuntu' and ansible_distribution_version is version('26.04', '==')) or
+        (ansible_distribution == 'Fedora' and ansible_distribution_major_version == '45')
+    fail_msg: "Роль opencode поддерживает только Ubuntu 26.04 и Fedora 45."
+
+- name: Установка зависимостей (Ubuntu)
+  ansible.builtin.apt:
+    name:
+      - ca-certificates
+      - curl
+      - gzip
+      - tar
+    state: present
+    update_cache: true
+  when: ansible_distribution == 'Ubuntu'
+
+- name: Установка зависимостей (Fedora)
+  ansible.builtin.dnf:
+    name:
+      - ca-certificates
+      - curl
+      - gzip
+      - tar
+    state: present
+  when: ansible_distribution == 'Fedora'
+
+- name: Создание каталогов пользователя
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ opencode_user }}"
+    group: "{{ opencode_user }}"
+    mode: '0755'
+  loop:
+    - "{{ opencode_home }}/.local/bin"
+    - "{{ opencode_home }}/.opencode/bin"
+    - "{{ opencode_home }}/.config/opencode"
+
+- name: Установка OpenCode
+  ansible.builtin.shell: >-
+    curl -fsSL https://opencode.ai/v2/install |
+    bash -s --
+    {% if opencode_version | length > 0 %}--version {{ opencode_version }}{% endif %}
+    --no-modify-path
+  args:
+    creates: "{{ opencode_home }}/.opencode/bin/opencode"
+    executable: /bin/bash
+  become: true
+  become_user: "{{ opencode_user }}"
+
+- name: Установка codebase-memory-mcp и настройка интеграции OpenCode
+  ansible.builtin.shell: >-
+    curl -fsSL https://raw.githubusercontent.com/DeusData/codebase-memory-mcp/main/install.sh |
+    bash -s --
+    --dir={{ codebase_memory_mcp_bin_dir }}
+    --clients=opencode
+  args:
+    creates: "{{ codebase_memory_mcp_binary }}"
+    executable: /bin/bash
+  environment:
+    CBM_DOWNLOAD_URL: >-
+      https://github.com/DeusData/codebase-memory-mcp/releases/download/v{{ codebase_memory_mcp_version }}
+  when: codebase_memory_mcp_version | length > 0
+  become: true
+  become_user: "{{ opencode_user }}"
+
+- name: Установка последней версии codebase-memory-mcp и настройка интеграции OpenCode
+  ansible.builtin.shell: >-
+    curl -fsSL https://raw.githubusercontent.com/DeusData/codebase-memory-mcp/main/install.sh |
+    bash -s --
+    --dir={{ codebase_memory_mcp_bin_dir }}
+    --clients=opencode
+  args:
+    creates: "{{ codebase_memory_mcp_binary }}"
+    executable: /bin/bash
+  when: codebase_memory_mcp_version | length == 0
+  become: true
+  become_user: "{{ opencode_user }}"
+
+- name: Добавление пользовательских каталогов инструментов в .profile
+  ansible.builtin.lineinfile:
+    path: "{{ opencode_home }}/.profile"
+    line: 'export PATH="$HOME/.local/bin:$HOME/.opencode/bin:$PATH"'
+    regexp: '^export PATH="\$HOME/\.local/bin:\$HOME/\.opencode/bin:'
+    create: true
+    owner: "{{ opencode_user }}"
+    group: "{{ opencode_user }}"
+    mode: '0644'
+
+- name: Добавление пользовательских каталогов инструментов в .zshrc
+  ansible.builtin.lineinfile:
+    path: "{{ opencode_home }}/.zshrc"
+    line: 'export PATH="$HOME/.local/bin:$HOME/.opencode/bin:$PATH"'
+    regexp: '^export PATH="\$HOME/\.local/bin:\$HOME/\.opencode/bin:'
+    create: true
+    owner: "{{ opencode_user }}"
+    group: "{{ opencode_user }}"
+    mode: '0644'
+
+- name: Проверка установки OpenCode
+  ansible.builtin.command: "{{ opencode_home }}/.opencode/bin/opencode --version"
+  become: true
+  become_user: "{{ opencode_user }}"
+  changed_when: false
+  register: opencode_installed_version
+
+- name: Проверка установки codebase-memory-mcp
+  ansible.builtin.command: "{{ codebase_memory_mcp_binary }} --version"
+  become: true
+  become_user: "{{ opencode_user }}"
+  changed_when: false
+  register: codebase_memory_mcp_installed_version
+
+- name: Вывод установленных инструментов
+  ansible.builtin.debug:
+    msg:
+      - "OpenCode: {{ opencode_installed_version.stdout }}"
+      - "codebase-memory-mcp: {{ codebase_memory_mcp_installed_version.stdout }}"

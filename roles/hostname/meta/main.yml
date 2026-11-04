@@ -1,0 +1,16 @@
+---
+galaxy_info:
+  author: linux_desktop_prepare
+  description: Установка hostname для Fedora и Ubuntu с сохранением после перезагрузки
+  license: MIT
+  min_ansible_version: "2.14"
+  platforms:
+    - name: Fedora
+      versions:
+        - "45"
+    - name: Ubuntu
+      versions:
+        - "26.04"
+  galaxy_tags:
+    - hostname
+    - system

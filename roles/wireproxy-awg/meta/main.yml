@@ -1,0 +1,18 @@
+---
+galaxy_info:
+  author: linux_desktop_prepare
+  description: Установка wireproxy-awg для Fedora и Ubuntu
+  license: MIT
+  min_ansible_version: "2.14"
+  platforms:
+    - name: Fedora
+      versions:
+        - "45"
+    - name: Ubuntu
+      versions:
+        - "26.04"
+  galaxy_tags:
+    - wireproxy
+    - wireproxy-awg
+    - vpn
+    - proxy

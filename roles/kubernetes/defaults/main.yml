@@ -1,0 +1,11 @@
+---
+# Минорная версия Kubernetes-репозитория (pkgs.k8s.io)
+kubernetes_minor_version: "v1.31"
+kubectl_version: ""
+kubectl_plugins:
+  - name: kubectl-df-pv
+    url: "https://raw.githubusercontent.com/rommll/kubectl-df-pv/main/dist/kubectl-df-pv"
+    download: true
+  - name: kubectl-node-shell
+    url: "https://raw.githubusercontent.com/kvaps/kubectl-node-shell/master/kubectl-node-shell"
+    download: true

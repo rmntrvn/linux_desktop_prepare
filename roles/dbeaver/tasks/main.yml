@@ -16,17 +16,23 @@
     mode: 'u=rwx,go=rx'
   when: ansible_facts['os_family'] == 'Debian'
 
-- name: Install key (apt)
+- name: Download DBeaver GPG key (apt)
   ansible.builtin.get_url:
     url: 'https://dbeaver.io/debs/dbeaver.gpg.key'
-    dest: '/etc/apt/keyrings/dbeaver.gpg.key'
+    dest: '/etc/apt/keyrings/dbeaver.asc'
     mode: 'u=rw,go=r'
     force: yes
   when: ansible_facts['os_family'] == 'Debian'
 
+- name: Dearmor DBeaver GPG key (apt)
+  ansible.builtin.command:
+    cmd: gpg --dearmor --yes -o /etc/apt/keyrings/dbeaver.gpg /etc/apt/keyrings/dbeaver.asc
+    creates: /etc/apt/keyrings/dbeaver.gpg
+  when: ansible_facts['os_family'] == 'Debian'
+
 - name: Add dbeaver repository (apt)
   ansible.builtin.apt_repository:
-    repo: 'deb [signed-by=/usr/share/keyrings/dbeaver.gpg.key] https://dbeaver.io/debs/dbeaver-ce /'
+    repo: 'deb [signed-by=/etc/apt/keyrings/dbeaver.gpg] https://dbeaver.io/debs/dbeaver-ce /'
     state: present
     filename: 'dbeaver'
     update_cache: true

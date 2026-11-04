@@ -1,0 +1,52 @@
+---
+- name: Установка зависимостей (apt)
+  ansible.builtin.apt:
+    name:
+      - wget
+      - gpg
+    state: present
+  when: ansible_os_family == 'Debian'
+
+- name: Установка зависимостей (dnf)
+  ansible.builtin.dnf:
+    name:
+      - wget
+      - gpg2
+    state: present
+  when: ansible_os_family == 'RedHat'
+
+- name: Скачивание Time Messenger для Ubuntu (deb)
+  ansible.builtin.get_url:
+    url: 'https://downloads.time-messenger.ru/desktop/linux/time-desktop-linux-amd64.deb'
+    dest: '/tmp/time-desktop-linux-amd64.deb'
+    mode: '0644'
+  when: ansible_os_family == 'Debian'
+
+- name: Установка Time Messenger (deb)
+  ansible.builtin.apt:
+    deb: '/tmp/time-desktop-linux-amd64.deb'
+    state: present
+    update_cache: true
+  when: ansible_os_family == 'Debian'
+
+- name: Скачивание Time Messenger для Fedora (rpm)
+  ansible.builtin.get_url:
+    url: 'https://downloads.time-messenger.ru/desktop/linux/time-desktop-linux-x86_64.rpm'
+    dest: '/tmp/time-desktop-linux-x86_64.rpm'
+    mode: '0644'
+  when: ansible_os_family == 'RedHat'
+
+- name: Установка Time Messenger (rpm)
+  ansible.builtin.dnf:
+    name: '/tmp/time-desktop-linux-x86_64.rpm'
+    state: present
+    disable_gpg_check: yes
+  when: ansible_os_family == 'RedHat'
+
+- name: Очистка временных файлов
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /tmp/time-desktop-linux-amd64.deb
+    - /tmp/time-desktop-linux-x86_64.rpm

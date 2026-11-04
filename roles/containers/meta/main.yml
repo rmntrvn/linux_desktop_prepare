@@ -1,0 +1,20 @@
+---
+galaxy_info:
+  author: rmntrvn
+  description: Установка Docker для Ubuntu и Podman для Fedora
+  license: MIT
+  min_ansible_version: "2.14"
+  platforms:
+    - name: Ubuntu
+      versions:
+        - all
+    - name: Fedora
+      versions:
+        - all
+  galaxy_tags:
+    - docker
+    - podman
+    - container
+    - containers
+
+dependencies: []

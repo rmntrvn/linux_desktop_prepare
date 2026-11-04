@@ -1,0 +1,54 @@
+---
+- name: Установка зависимостей (apt)
+  ansible.builtin.apt:
+    name:
+      - ca-certificates
+      - curl
+      - gnupg
+      - lsb-release
+    state: present
+  when: ansible_os_family == 'Debian'
+
+- name: Установка зависимостей (dnf)
+  ansible.builtin.dnf:
+    name:
+      - ca-certificates
+      - curl
+      - gnupg
+      - which
+    state: present
+  when: ansible_os_family == 'RedHat'
+
+- name: Определение последней версии kubie
+  ansible.builtin.uri:
+    url: https://api.github.com/repos/kubie-rs/kubie/releases/latest
+    return_content: true
+  register: kubie_latest_release
+  when: (kubie_version is not defined) or (kubie_version | length == 0)
+
+- name: Установка версии kubie из latest release
+  ansible.builtin.set_fact:
+    kubie_version: "{{ (kubie_latest_release.content | from_json).tag_name | replace('v', '') }}"
+  when: (kubie_version is not defined) or (kubie_version | length == 0)
+
+- name: Скачивание бинарного файла kubie
+  ansible.builtin.get_url:
+    url: "https://github.com/kubie-rs/kubie/releases/download/v{{ kubie_version }}/kubie-linux-amd64"
+    dest: /usr/local/bin/kubie
+    mode: '0755'
+
+- name: Создание директории для конфига kubie
+  ansible.builtin.file:
+    path: "{{ kubie_config_dir }}"
+    state: directory
+    owner: "{{ kubie_user }}"
+    group: "{{ kubie_user }}"
+    mode: '0755'
+
+- name: Копирование конфига kubie.yaml
+  ansible.builtin.template:
+    src: kubie.yaml.j2
+    dest: "{{ kubie_config_dir }}/kubie.yaml"
+    owner: "{{ kubie_user }}"
+    group: "{{ kubie_user }}"
+    mode: '0644'

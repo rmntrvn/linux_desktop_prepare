@@ -1,0 +1,46 @@
+---
+- name: Проверка Fedora 45
+  ansible.builtin.assert:
+    that:
+      - ansible_distribution == 'Fedora'
+      - ansible_distribution_major_version == '45'
+    fail_msg: "Роль fedora-codecs предназначена только для Fedora 45."
+
+- name: Проверка репозитория Cisco OpenH264
+  ansible.builtin.stat:
+    path: /etc/yum.repos.d/fedora-cisco-openh264.repo
+  register: fedora_cisco_openh264_repo
+
+- name: Отключение репозитория Cisco OpenH264
+  community.general.ini_file:
+    path: /etc/yum.repos.d/fedora-cisco-openh264.repo
+    section: fedora-cisco-openh264
+    option: enabled
+    value: '0'
+    mode: '0644'
+    no_extra_spaces: true
+  when:
+    - fedora_codecs_disable_cisco_openh264
+    - fedora_cisco_openh264_repo.stat.exists
+
+- name: Удаление пакетов Cisco OpenH264
+  ansible.builtin.dnf:
+    name:
+      - mozilla-openh264
+      - gstreamer1-plugin-openh264
+    state: absent
+  when: fedora_codecs_remove_cisco_packages
+
+- name: Установка RPM Fusion Free
+  ansible.builtin.dnf:
+    name: "https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-{{ ansible_distribution_major_version }}.noarch.rpm"
+    state: present
+    disable_gpg_check: false
+  when: fedora_codecs_install_rpmfusion_free
+
+- name: Установка свободных мультимедийных кодеков
+  ansible.builtin.dnf:
+    name: "{{ fedora_codecs_packages }}"
+    state: present
+    update_cache: true
+    allowerasing: true

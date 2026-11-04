@@ -1,0 +1,19 @@
+---
+galaxy_info:
+  author: rmntrvn
+  description: Установка Tailscale клиента для Fedora 45 и Ubuntu 26.04
+  license: MIT
+  min_ansible_version: "2.14"
+  platforms:
+    - name: Fedora
+      versions:
+        - "45"
+    - name: Ubuntu
+      versions:
+        - "26.04"
+  galaxy_tags:
+    - tailscale
+    - vpn
+    - networking
+
+dependencies: []
