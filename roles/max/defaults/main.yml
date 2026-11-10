@@ -1,0 +1,7 @@
+---
+max_package: max
+max_apt_key_url: https://download.max.ru/linux/deb/public.asc
+max_apt_keyring: /etc/apt/keyrings/max.gpg
+max_apt_repository: https://download.max.ru/linux/deb
+max_rpm_key_url: https://download.max.ru/linux/rpm/public.asc
+max_rpm_baseurl: https://download.max.ru/linux/rpm/el/9/x86_64

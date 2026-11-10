@@ -1,0 +1,189 @@
+---
+- name: Validate supported operating system
+  ansible.builtin.assert:
+    that:
+      - ansible_facts['distribution'] in ['Ubuntu', 'Fedora']
+      - (ansible_facts['distribution'] == 'Ubuntu' and ansible_facts['distribution_version'] is version('26.04', '==')) or
+        (ansible_facts['distribution'] == 'Fedora' and ansible_facts['distribution_major_version'] == '45')
+      - ansible_facts['distribution'] != 'Ubuntu' or ansible_facts['architecture'] == 'x86_64'
+    fail_msg: Helix file tree role supports Ubuntu 26.04 amd64 and Fedora 45.
+
+- name: Install Helix (Fedora)
+  ansible.builtin.dnf:
+    name: helix
+    state: present
+  when: ansible_facts['distribution'] == 'Fedora'
+
+- name: Install Ubuntu package dependencies
+  ansible.builtin.apt:
+    name:
+      - ca-certificates
+      - file
+      - jq
+    state: present
+    update_cache: true
+  when: ansible_facts['distribution'] == 'Ubuntu'
+
+- name: Add Helix PPA (Ubuntu)
+  ansible.builtin.deb822_repository:
+    name: helix-editor
+    types: deb
+    uris: https://ppa.launchpadcontent.net/maveonair/helix-editor/ubuntu
+    suites: "{{ helix_ppa_suite }}"
+    components: [main]
+    signed_by: "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x27642B9FD7F1A161FC2524E3355A4FA515D7C855"
+    state: present
+  when: ansible_facts['distribution'] == 'Ubuntu'
+
+- name: Install Helix from PPA (Ubuntu)
+  ansible.builtin.apt:
+    name: helix
+    state: present
+    update_cache: true
+  when: ansible_facts['distribution'] == 'Ubuntu'
+
+- name: Create APT keyrings directory (Ubuntu)
+  ansible.builtin.file:
+    path: /usr/share/keyrings
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+  when: ansible_facts['distribution'] == 'Ubuntu'
+
+- name: Download Yazi APT signing key (Ubuntu)
+  ansible.builtin.get_url:
+    url: https://yazi-rs.github.io/builds/yazi-keyring.gpg
+    dest: "{{ yazi_apt_keyring }}"
+    owner: root
+    group: root
+    mode: '0644'
+  when: ansible_facts['distribution'] == 'Ubuntu'
+
+- name: Add Yazi APT repository (Ubuntu)
+  ansible.builtin.deb822_repository:
+    name: yazi
+    types: deb
+    uris: https://yazi-rs.github.io/builds
+    suites: stable
+    components: [main]
+    signed_by: "{{ yazi_apt_keyring }}"
+    state: present
+  when: ansible_facts['distribution'] == 'Ubuntu'
+
+- name: Install Yazi and Konsole dependencies (Ubuntu)
+  ansible.builtin.apt:
+    name:
+      - jq
+      - konsole
+      - qdbus-qt5
+      - "{{ yazi_package }}"
+    state: present
+    update_cache: true
+  when: ansible_facts['distribution'] == 'Ubuntu'
+
+- name: Install Yazi and Konsole dependencies (Fedora)
+  ansible.builtin.dnf:
+    name:
+      - file
+      - jq
+      - konsole
+      - qt6-qttools
+      - dnf-plugins-core
+    state: present
+  when: ansible_facts['distribution'] == 'Fedora'
+
+- name: Enable Yazi COPR repository (Fedora)
+  ansible.builtin.command:
+    cmd: "dnf -y copr enable {{ yazi_copr_project }}"
+    creates: /etc/yum.repos.d/_copr:copr.fedorainfracloud.org:lihaohong:yazi.repo
+  when: ansible_facts['distribution'] == 'Fedora'
+
+- name: Install Yazi (Fedora)
+  ansible.builtin.dnf:
+    name: "{{ yazi_package }}"
+    state: present
+  when: ansible_facts['distribution'] == 'Fedora'
+
+- name: Create file tree Yazi directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ helix_filetree_user }}"
+    group: "{{ helix_filetree_user }}"
+    mode: '0755'
+  loop:
+    - "{{ helix_filetree_config_home }}"
+    - "{{ helix_filetree_config_home }}/plugins"
+    - "{{ helix_filetree_config_home }}/plugins/smart-enter.yazi"
+
+- name: Install file tree Yazi configuration
+  ansible.builtin.template:
+    src: "{{ item.src }}"
+    dest: "{{ helix_filetree_config_home }}/{{ item.dest }}"
+    owner: "{{ helix_filetree_user }}"
+    group: "{{ helix_filetree_user }}"
+    mode: '0644'
+  loop:
+    - src: yazi-config.toml.j2
+      dest: config.toml
+    - src: yazi-keymap.toml.j2
+      dest: keymap.toml
+    - src: smart-enter.lua.j2
+      dest: plugins/smart-enter.yazi/init.lua
+
+- name: Install Konsole file tree launcher
+  ansible.builtin.template:
+    src: helix-file-tree.j2
+    dest: /usr/local/bin/helix-file-tree
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Create Helix configuration directory
+  ansible.builtin.file:
+    path: "{{ helix_filetree_home }}/.config/helix"
+    state: directory
+    owner: "{{ helix_filetree_user }}"
+    group: "{{ helix_filetree_user }}"
+    mode: '0755'
+
+- name: Install custom Helix configuration
+  ansible.builtin.copy:
+    content: "{{ helix_config }}\n"
+    dest: "{{ helix_filetree_home }}/.config/helix/config.toml"
+    owner: "{{ helix_filetree_user }}"
+    group: "{{ helix_filetree_user }}"
+    mode: '0644'
+  when: helix_config | length > 0
+
+- name: Install default Helix configuration
+  ansible.builtin.template:
+    src: helix-config.toml.j2
+    dest: "{{ helix_filetree_home }}/.config/helix/config.toml"
+    owner: "{{ helix_filetree_user }}"
+    group: "{{ helix_filetree_user }}"
+    mode: '0644'
+  when: helix_config | length == 0
+
+- name: Ensure Helix normal keymap table exists
+  ansible.builtin.lineinfile:
+    path: "{{ helix_filetree_home }}/.config/helix/config.toml"
+    line: '[keys.normal]'
+    regexp: '^\[keys\.normal\]$'
+    insertafter: EOF
+    create: true
+    owner: "{{ helix_filetree_user }}"
+    group: "{{ helix_filetree_user }}"
+    mode: '0644'
+
+- name: Bind Ctrl+y to the Konsole file tree
+  ansible.builtin.lineinfile:
+    path: "{{ helix_filetree_home }}/.config/helix/config.toml"
+    line: '{{ helix_filetree_key }} = ":sh helix-file-tree"'
+    regexp: '^{{ helix_filetree_key | regex_escape }}\s*='
+    insertafter: '^\[keys\.normal\]$'
+    create: true
+    owner: "{{ helix_filetree_user }}"
+    group: "{{ helix_filetree_user }}"
+    mode: '0644'

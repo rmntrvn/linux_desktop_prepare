@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [[ -z "${KONSOLE_DBUS_SERVICE:-}" || -z "${KONSOLE_DBUS_SESSION:-}" ]]; then
+  echo "helix-file-tree must be started from Konsole" >&2
+  exit 1
+fi
+
+qdbus_command=""
+if command -v qdbus6 >/dev/null 2>&1; then
+  qdbus_command=qdbus6
+elif command -v qdbus >/dev/null 2>&1; then
+  qdbus_command=qdbus
+else
+  echo "Neither qdbus6 nor qdbus is installed" >&2
+  exit 1
+fi
+
+exec konsole --new-window \
+  --workdir "${PWD}" \
+  --title "Helix file tree" \
+  -e env \
+    YAZI_CONFIG_HOME="{{ helix_filetree_config_home }}" \
+    HELIX_KONSOLE_DBUS_SERVICE="${KONSOLE_DBUS_SERVICE}" \
+    HELIX_KONSOLE_DBUS_SESSION="${KONSOLE_DBUS_SESSION}" \
+    HELIX_KONSOLE_QDBUS="${qdbus_command}" \
+    yazi

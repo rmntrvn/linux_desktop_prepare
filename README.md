@@ -48,6 +48,14 @@ ansible-playbook -i inventory.yml playbook.yml --tags dnf-optimization --ask-bec
 ansible-playbook -i inventory.yml playbook.yml --tags opencode --ask-become-pass
 ```
 
+Роль `helix-filetree` устанавливает Helix из PPA `ppa:maveonair/helix-editor`,
+Yazi, `jq` и настраивает file tree в Konsole на Ubuntu 26.04 и Fedora 45.
+Кастомный TOML-конфиг Helix можно передать через `helix_config`:
+```
+ansible-playbook -i inventory.yml playbook.yml --tags helix-filetree \
+  -e 'helix_config=theme = "catppuccin_mocha"' --ask-become-pass
+```
+
 ## TODO:
 
 - [x] Роль установки zsh с плагином oh-my-zsh.

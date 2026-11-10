@@ -1,0 +1,39 @@
+local function shell_quote(value)
+  return "'" .. value:gsub("'", "'\\''") .. "'"
+end
+
+return {
+  entry = function()
+    local hovered = cx.active.current.hovered
+
+    if hovered.cha.is_dir then
+      ya.manager_emit("enter", { hovered = true })
+      return
+    end
+
+    local service = os.getenv("HELIX_KONSOLE_DBUS_SERVICE")
+    local session = os.getenv("HELIX_KONSOLE_DBUS_SESSION")
+    local qdbus = os.getenv("HELIX_KONSOLE_QDBUS") or "qdbus6"
+
+    if service == nil or session == nil then
+      ya.notify({
+        title = "Helix file tree",
+        content = "Konsole D-Bus session is unavailable",
+        timeout = 3,
+        level = "error",
+      })
+      return
+    end
+
+    local command = table.concat({
+      shell_quote(qdbus),
+      shell_quote(service),
+      shell_quote(session),
+      "sendText",
+      shell_quote("hx " .. shell_quote(tostring(hovered.url)) .. "\n"),
+    }, " ")
+
+    os.execute(command)
+    ya.manager_emit("quit", {})
+  end,
+}

@@ -1,0 +1,11 @@
+---
+helix_filetree_user: "{{ lookup('env', 'USER') }}"
+helix_filetree_home: "/home/{{ helix_filetree_user }}"
+helix_filetree_config_home: "{{ helix_filetree_home }}/.config/yazi-filetree"
+helix_filetree_key: C-y
+helix_config: ""
+helix_ppa: ppa:maveonair/helix-editor
+helix_ppa_suite: oracular
+yazi_package: yazi
+yazi_copr_project: lihaohong/yazi
+yazi_apt_keyring: /usr/share/keyrings/yazi-keyring.gpg

@@ -260,6 +260,24 @@
   tags:
     - time-messenger
 
+- name: Install MAX messenger
+  hosts: localhost
+  become: true
+  gather_facts: true
+  roles:
+    - role: max
+  tags:
+    - max
+
+- name: Install Minцифры CA certificates
+  hosts: localhost
+  become: true
+  gather_facts: true
+  roles:
+    - role: mincifry-certificates
+  tags:
+    - mincifry-certificates
+
 - name: Install flathub packages
   hosts: localhost
   become: true
@@ -276,8 +294,6 @@
   hosts: localhost
   become: true
   gather_facts: true
-  vars:
-    tailscale_version: ""
   roles:
     - role: tailscale
   tags:
@@ -294,6 +310,26 @@
     - role: containers
   tags:
     - containers
+
+- name: Install Distrobox
+  hosts: localhost
+  become: true
+  gather_facts: true
+  roles:
+    - role: distrobox
+  tags:
+    - distrobox
+
+- name: Configure Helix file tree for Konsole
+  hosts: localhost
+  become: true
+  gather_facts: true
+  vars:
+    helix_config: ""
+  roles:
+    - role: helix-filetree
+  tags:
+    - helix-filetree
 
 - name: Install OpenCode and codebase-memory-mcp
   hosts: localhost

@@ -1,0 +1,54 @@
+---
+- name: Validate supported operating system
+  ansible.builtin.assert:
+    that:
+      - ansible_facts['distribution'] in ['Ubuntu', 'Fedora']
+    fail_msg: Minцифры certificates role supports only Ubuntu and Fedora.
+
+- name: Install certificate tools (Ubuntu)
+  ansible.builtin.apt:
+    name:
+      - ca-certificates
+      - openssl
+    state: present
+    update_cache: true
+  when: ansible_facts['distribution'] == 'Ubuntu'
+
+- name: Install certificate tools (Fedora)
+  ansible.builtin.dnf:
+    name:
+      - ca-certificates
+      - openssl
+    state: present
+  when: ansible_facts['distribution'] == 'Fedora'
+
+- name: Create Ubuntu certificate directory
+  ansible.builtin.file:
+    path: "{{ mincifry_ubuntu_certificates_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+  when: ansible_facts['distribution'] == 'Ubuntu'
+
+- name: Download Minцифры certificates (Ubuntu)
+  ansible.builtin.get_url:
+    url: "{{ item.url }}"
+    dest: "{{ mincifry_ubuntu_certificates_dir }}/{{ item.name }}"
+    owner: root
+    group: root
+    mode: '0644'
+  loop: "{{ mincifry_certificates }}"
+  notify: Update Ubuntu CA certificates
+  when: ansible_facts['distribution'] == 'Ubuntu'
+
+- name: Download Minцифры certificates (Fedora)
+  ansible.builtin.get_url:
+    url: "{{ item.url }}"
+    dest: "{{ mincifry_fedora_certificates_dir }}/{{ item.name }}"
+    owner: root
+    group: root
+    mode: '0644'
+  loop: "{{ mincifry_certificates }}"
+  notify: Update Fedora CA trust
+  when: ansible_facts['distribution'] == 'Fedora'

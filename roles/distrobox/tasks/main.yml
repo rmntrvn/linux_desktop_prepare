@@ -1,0 +1,19 @@
+---
+- name: Validate supported operating system
+  ansible.builtin.assert:
+    that:
+      - ansible_facts['distribution'] in ['Ubuntu', 'Fedora']
+    fail_msg: Distrobox role supports only Ubuntu and Fedora.
+
+- name: Install Distrobox (Ubuntu)
+  ansible.builtin.apt:
+    name: "{{ distrobox_package }}"
+    state: present
+    update_cache: true
+  when: ansible_facts['distribution'] == 'Ubuntu'
+
+- name: Install Distrobox (Fedora)
+  ansible.builtin.dnf:
+    name: "{{ distrobox_package }}"
+    state: present
+  when: ansible_facts['distribution'] == 'Fedora'

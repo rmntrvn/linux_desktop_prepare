@@ -1,0 +1,86 @@
+---
+- name: Validate supported operating system
+  ansible.builtin.assert:
+    that:
+      - ansible_facts['distribution'] in ['Ubuntu', 'Fedora']
+      - ansible_facts['architecture'] == 'x86_64'
+    fail_msg: MAX role supports Ubuntu and Fedora on x86_64.
+
+- name: Install MAX APT dependencies (Ubuntu)
+  ansible.builtin.apt:
+    name:
+      - ca-certificates
+      - gnupg
+    state: present
+    update_cache: true
+  when: ansible_facts['distribution'] == 'Ubuntu'
+
+- name: Create APT keyrings directory for MAX (Ubuntu)
+  ansible.builtin.file:
+    path: "{{ max_apt_keyring | dirname }}"
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+  when: ansible_facts['distribution'] == 'Ubuntu'
+
+- name: Download MAX APT signing key (Ubuntu)
+  ansible.builtin.get_url:
+    url: "{{ max_apt_key_url }}"
+    dest: /tmp/max-public.asc
+    owner: root
+    group: root
+    mode: '0644'
+  when: ansible_facts['distribution'] == 'Ubuntu'
+
+- name: Convert MAX APT signing key to keyring (Ubuntu)
+  ansible.builtin.command:
+    cmd: "gpg --batch --yes --dearmor --output {{ max_apt_keyring }} /tmp/max-public.asc"
+  args:
+    creates: "{{ max_apt_keyring }}"
+  when: ansible_facts['distribution'] == 'Ubuntu'
+
+- name: Add MAX APT repository (Ubuntu)
+  ansible.builtin.deb822_repository:
+    name: max
+    types: deb
+    uris: "{{ max_apt_repository }}"
+    suites: stable
+    components:
+      - main
+    signed_by: "{{ max_apt_keyring }}"
+    state: present
+  when: ansible_facts['distribution'] == 'Ubuntu'
+
+- name: Install MAX (Ubuntu)
+  ansible.builtin.apt:
+    name: "{{ max_package }}"
+    state: present
+    update_cache: true
+  when: ansible_facts['distribution'] == 'Ubuntu'
+
+- name: Import MAX RPM signing key (Fedora)
+  ansible.builtin.rpm_key:
+    key: "{{ max_rpm_key_url }}"
+    state: present
+  when: ansible_facts['distribution'] == 'Fedora'
+
+- name: Add MAX RPM repository (Fedora)
+  ansible.builtin.yum_repository:
+    name: max
+    description: MAX Desktop
+    baseurl: "{{ max_rpm_baseurl }}"
+    enabled: true
+    gpgcheck: true
+    repo_gpgcheck: true
+    gpgkey: "{{ max_rpm_key_url }}"
+    sslverify: true
+    metadata_expire: 300
+    state: present
+  when: ansible_facts['distribution'] == 'Fedora'
+
+- name: Install MAX (Fedora)
+  ansible.builtin.dnf:
+    name: "{{ max_package }}"
+    state: present
+  when: ansible_facts['distribution'] == 'Fedora'
