@@ -56,6 +56,13 @@
     mode: '0644'
   when: ansible_facts['os_family'] == 'RedHat'
 
+- name: Синхронизация версии Fedora в репозитории HashiCorp
+  ansible.builtin.replace:
+    path: /etc/yum.repos.d/hashicorp.repo
+    regexp: '(/fedora/)[0-9]+(/)'
+    replace: '\g<1>{{ ansible_facts["distribution_major_version"] }}\g<2>'
+  when: ansible_facts['os_family'] == 'RedHat'
+
 - name: Установка пакетов HashiCorp (dnf)
   ansible.builtin.dnf:
     name: "{{ hashicorp_packages }}"

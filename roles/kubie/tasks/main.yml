@@ -33,7 +33,7 @@
 
 - name: Скачивание бинарного файла kubie
   ansible.builtin.get_url:
-    url: "https://github.com/kubie-rs/kubie/releases/download/v{{ kubie_version }}/kubie-linux-amd64"
+    url: "https://github.com/kubie-org/kubie/releases/download/v{{ kubie_version }}/kubie-linux-amd64"
     dest: /usr/local/bin/kubie
     mode: '0755'
 

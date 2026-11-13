@@ -48,11 +48,34 @@
     update_cache: true
   when: ansible_facts['os_family'] == 'Debian'
 
-- name: Install dbeaver  (dnf)
-  ansible.builtin.dnf:
-    name: "https://dbeaver.io/files/dbeaver-ce-latest-stable.x86_64.rpm"
-    state: present
-    update_cache: true
-    # The vendor RPM is currently published without an OpenPGP signature.
-    disable_gpg_check: true
+- name: Download dbeaver (dnf)
+  ansible.builtin.command:
+    argv:
+      - curl
+      - --fail
+      - --silent
+      - --show-error
+      - --location
+      - https://dbeaver.io/files/dbeaver-ce-latest-stable.x86_64.rpm
+      - --output
+      - /tmp/dbeaver-ce-latest-stable.x86_64.rpm
+    creates: /tmp/dbeaver-ce-latest-stable.x86_64.rpm
+  when: ansible_facts['os_family'] == 'RedHat'
+
+- name: Install dbeaver (dnf)
+  ansible.builtin.command:
+    argv:
+      - dnf
+      - install
+      - --assumeyes
+      - --nogpgcheck
+      - /tmp/dbeaver-ce-latest-stable.x86_64.rpm
+  register: dbeaver_install
+  changed_when: dbeaver_install.rc == 0
+  when: ansible_facts['os_family'] == 'RedHat'
+
+- name: Remove downloaded dbeaver package
+  ansible.builtin.file:
+    path: /tmp/dbeaver-ce-latest-stable.x86_64.rpm
+    state: absent
   when: ansible_facts['os_family'] == 'RedHat'

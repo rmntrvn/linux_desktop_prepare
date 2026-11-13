@@ -34,6 +34,7 @@
     dest: "{{ zsh_home }}/.oh-my-zsh"
     version: master
     depth: 1
+    force: true
   become: true
   become_user: "{{ zsh_user }}"
 
@@ -53,6 +54,7 @@
     repo: https://github.com/zsh-users/zsh-syntax-highlighting.git
     dest: "{{ zsh_home }}/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting"
     version: "{{ zsh_syntax_highlighting_version }}"
+    force: true
   become: true
   become_user: "{{ zsh_user }}"
   when: zsh_syntax_highlighting | default(true)
@@ -62,6 +64,7 @@
     repo: https://github.com/zsh-users/zsh-autosuggestions.git
     dest: "{{ zsh_home }}/.oh-my-zsh/custom/plugins/zsh-autosuggestions"
     version: "{{ zsh_autosuggestions_version }}"
+    force: true
   become: true
   become_user: "{{ zsh_user }}"
   when: zsh_autosuggestions | default(true)

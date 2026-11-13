@@ -3,6 +3,7 @@
   ansible.builtin.apt:
     name:
       - wget
+      - curl
       - gpg
     state: present
   when: ansible_os_family == 'Debian'
@@ -11,7 +12,8 @@
   ansible.builtin.dnf:
     name:
       - wget
-      - gpg2
+      - curl
+      - gnupg2
     state: present
   when: ansible_os_family == 'RedHat'
 
@@ -30,10 +32,16 @@
   when: ansible_os_family == 'Debian'
 
 - name: Скачивание Time Messenger для Fedora (rpm)
-  ansible.builtin.get_url:
-    url: 'https://downloads.time-messenger.ru/desktop/linux/time-desktop-linux-x86_64.rpm'
-    dest: '/tmp/time-desktop-linux-x86_64.rpm'
-    mode: '0644'
+  ansible.builtin.shell: >-
+    curl --fail --location --retry 5 --retry-all-errors --retry-delay 5
+    --retry-max-time 900 --connect-timeout 20 --max-time 300
+    --output /tmp/time-desktop-linux-x86_64.rpm.part
+    --continue-at -
+    'https://downloads.time-messenger.ru/desktop/linux/time-desktop-linux-x86_64.rpm'
+    && mv /tmp/time-desktop-linux-x86_64.rpm.part /tmp/time-desktop-linux-x86_64.rpm
+  args:
+    creates: /tmp/time-desktop-linux-x86_64.rpm
+  register: time_messenger_rpm_download
   when: ansible_os_family == 'RedHat'
 
 - name: Установка Time Messenger (rpm)
@@ -50,3 +58,4 @@
   loop:
     - /tmp/time-desktop-linux-amd64.deb
     - /tmp/time-desktop-linux-x86_64.rpm
+    - /tmp/time-desktop-linux-x86_64.rpm.part

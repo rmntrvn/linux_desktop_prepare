@@ -1,0 +1,28 @@
+---
+fedora_yandex_repositories:
+  - name: Fedora base
+    path: /usr/share/dnf5/repos.d/fedora.repo
+    section: fedora
+    baseurl: https://mirror.yandex.ru/fedora/linux/releases/$releasever/Everything/$basearch/os/
+  - name: Fedora updates
+    path: /usr/share/dnf5/repos.d/fedora-updates.repo
+    section: updates
+    baseurl: https://mirror.yandex.ru/fedora/linux/updates/$releasever/Everything/$basearch/
+  - name: RPM Fusion Free
+    path: /usr/share/dnf5/repos.d/rpmfusion-free.repo
+    section: rpmfusion-free
+    baseurl: https://mirror.yandex.ru/fedora/rpmfusion/free/fedora/releases/$releasever/Everything/$basearch/os/
+  - name: RPM Fusion Free updates
+    path: /usr/share/dnf5/repos.d/rpmfusion-free-updates.repo
+    section: rpmfusion-free-updates
+    baseurl: https://mirror.yandex.ru/fedora/rpmfusion/free/fedora/updates/$releasever/$basearch/
+  - name: RPM Fusion Nonfree
+    path: /usr/share/dnf5/repos.d/rpmfusion-nonfree.repo
+    section: rpmfusion-nonfree
+    baseurl: https://mirror.yandex.ru/fedora/rpmfusion/nonfree/fedora/releases/$releasever/Everything/$basearch/os/
+  - name: RPM Fusion Nonfree updates
+    path: /usr/share/dnf5/repos.d/rpmfusion-nonfree-updates.repo
+    section: rpmfusion-nonfree-updates
+    baseurl: https://mirror.yandex.ru/fedora/rpmfusion/nonfree/fedora/updates/$releasever/$basearch/
+
+fedora_yandex_rpmfusion_release_url: https://mirror.yandex.ru/fedora/rpmfusion

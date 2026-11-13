@@ -20,29 +20,48 @@
   when: ansible_facts['os_family'] == 'RedHat'
 
 - name: Получение последнего релиза wireproxy-awg
-  ansible.builtin.uri:
-    url: https://api.github.com/repos/artem-russkikh/wireproxy-awg/releases/latest
-    return_content: true
+  ansible.builtin.command:
+    argv:
+      - curl
+      - --fail
+      - --silent
+      - --show-error
+      - --location
+      - https://api.github.com/repos/artem-russkikh/wireproxy-awg/releases/latest
   check_mode: false
   register: wireproxy_latest_release
+  changed_when: false
   when: wireproxy_version | default('latest') in ['', 'latest']
 
 - name: Определение версии wireproxy-awg
   ansible.builtin.set_fact:
-    wireproxy_version: "{{ (wireproxy_latest_release.content | from_json).tag_name | replace('v', '') }}"
+    wireproxy_version: "{{ (wireproxy_latest_release.stdout | from_json).tag_name | replace('v', '') }}"
   when: wireproxy_version | default('latest') in ['', 'latest']
 
 - name: Скачивание wireproxy-awg
-  ansible.builtin.get_url:
-    url: "https://github.com/artem-russkikh/wireproxy-awg/releases/download/v{{ wireproxy_version }}/{{ wireproxy_archive_name }}"
-    dest: "/tmp/{{ wireproxy_archive_name }}"
-    mode: '0644'
+  ansible.builtin.command:
+    argv:
+      - curl
+      - --fail
+      - --silent
+      - --show-error
+      - --location
+      - "https://github.com/artem-russkikh/wireproxy-awg/releases/download/v{{ wireproxy_version }}/{{ wireproxy_archive_name }}"
+      - --output
+      - "/tmp/{{ wireproxy_archive_name }}"
+    creates: "/tmp/{{ wireproxy_archive_name }}"
 
 - name: Распаковка wireproxy-awg
-  ansible.builtin.unarchive:
-    src: "/tmp/{{ wireproxy_archive_name }}"
-    dest: /tmp
-    remote_src: true
+  ansible.builtin.command:
+    argv:
+      - tar
+      - --extract
+      - --gzip
+      - --file
+      - "/tmp/{{ wireproxy_archive_name }}"
+      - --directory
+      - /tmp
+    creates: /tmp/wireproxy
   when: not ansible_check_mode
 
 - name: Создание каталога установки wireproxy
@@ -100,10 +119,17 @@
     mode: '0755'
 
 - name: Установка systemd unit wireproxy по умолчанию
-  ansible.builtin.get_url:
-    url: "{{ wireproxy_systemd_unit_url }}"
-    dest: /etc/systemd/system/wireproxy.service
-    mode: '0644'
+  ansible.builtin.command:
+    argv:
+      - curl
+      - --fail
+      - --silent
+      - --show-error
+      - --location
+      - "{{ wireproxy_systemd_unit_url }}"
+      - --output
+      - /etc/systemd/system/wireproxy.service
+    creates: /etc/systemd/system/wireproxy.service
   when:
     - wireproxy_systemd_config | default('') | length == 0
 

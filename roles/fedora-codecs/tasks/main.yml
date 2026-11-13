@@ -8,12 +8,12 @@
 
 - name: Проверка репозитория Cisco OpenH264
   ansible.builtin.stat:
-    path: /etc/yum.repos.d/fedora-cisco-openh264.repo
+    path: /usr/share/dnf5/repos.d/fedora-cisco-openh264.repo
   register: fedora_cisco_openh264_repo
 
 - name: Отключение репозитория Cisco OpenH264
   community.general.ini_file:
-    path: /etc/yum.repos.d/fedora-cisco-openh264.repo
+    path: /usr/share/dnf5/repos.d/fedora-cisco-openh264.repo
     section: fedora-cisco-openh264
     option: enabled
     value: '0'
@@ -31,12 +31,36 @@
     state: absent
   when: fedora_codecs_remove_cisco_packages
 
+- name: Download RPM Fusion Free release package
+  ansible.builtin.command:
+    argv:
+      - curl
+      - --fail
+      - --silent
+      - --show-error
+      - --location
+      - "{{ fedora_codecs_rpmfusion_free_release_url }}-{{ ansible_facts['distribution_major_version'] }}.noarch.rpm"
+      - --output
+      - "/tmp/rpmfusion-free-release-{{ ansible_facts['distribution_major_version'] }}.noarch.rpm"
+    creates: "/tmp/rpmfusion-free-release-{{ ansible_facts['distribution_major_version'] }}.noarch.rpm"
+  when: fedora_codecs_install_rpmfusion_free
+
 - name: Установка RPM Fusion Free
-  ansible.builtin.dnf:
-    name: "https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-{{ ansible_facts['distribution_major_version'] }}.noarch.rpm"
-    state: present
-    # The release RPM bootstraps the repository key and cannot be verified before installation.
-    disable_gpg_check: true
+  ansible.builtin.command:
+    argv:
+      - dnf
+      - install
+      - --assumeyes
+      - --nogpgcheck
+      - "/tmp/rpmfusion-free-release-{{ ansible_facts['distribution_major_version'] }}.noarch.rpm"
+  when: fedora_codecs_install_rpmfusion_free
+  register: fedora_codecs_rpmfusion_install
+  changed_when: fedora_codecs_rpmfusion_install.rc == 0
+
+- name: Remove temporary RPM Fusion Free release package
+  ansible.builtin.file:
+    path: "/tmp/rpmfusion-free-release-{{ ansible_facts['distribution_major_version'] }}.noarch.rpm"
+    state: absent
   when: fedora_codecs_install_rpmfusion_free
 
 - name: Установка свободных мультимедийных кодеков

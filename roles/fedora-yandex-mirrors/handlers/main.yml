@@ -1,0 +1,4 @@
+---
+- name: Clean DNF metadata after mirror change
+  ansible.builtin.command: dnf clean metadata
+  changed_when: false

@@ -2,6 +2,7 @@
 fedora_codecs_disable_cisco_openh264: true
 fedora_codecs_remove_cisco_packages: true
 fedora_codecs_install_rpmfusion_free: true
+fedora_codecs_rpmfusion_free_release_url: https://mirror.yandex.ru/fedora/rpmfusion/free/fedora/rpmfusion-free-release
 
 fedora_codecs_packages:
   - ffmpeg-free

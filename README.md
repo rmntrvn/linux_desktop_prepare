@@ -43,9 +43,15 @@ ansible-playbook -i inventory.yml playbook.yml --tags dnf-optimization --ask-bec
 
 Роль `opencode` устанавливает OpenCode и codebase-memory-mcp для пользователя,
 запустившего playbook через `sudo`. MCP-сервер автоматически добавляется в
-глобальную конфигурацию OpenCode. Запустить только эту роль можно так:
+глобальную конфигурацию OpenCode. Прокси для OpenCode service включается через
+`use_proxy: true`; адрес можно настроить переменными `proxy_host`, `proxy_port`
+и `proxy_scheme`:
 ```
 ansible-playbook -i inventory.yml playbook.yml --tags opencode --ask-become-pass
+
+ansible-playbook -i inventory.yml playbook.yml --tags opencode \
+  -e 'use_proxy=true proxy_host=192.168.1.10 proxy_port=25345' \
+  --ask-become-pass
 ```
 
 Роль `helix-filetree` устанавливает Helix из PPA `ppa:maveonair/helix-editor`,

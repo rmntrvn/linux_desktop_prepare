@@ -96,10 +96,19 @@
     - (kubectl_version is not defined) or (kubectl_version | length == 0)
 
 - name: Скачивание kubectl plugins
-  ansible.builtin.get_url:
-    url: "{{ item.url }}"
-    dest: "/usr/local/bin/{{ item.name }}"
-    mode: '0755'
+  ansible.builtin.command:
+    argv:
+      - curl
+      - --fail
+      - --silent
+      - --show-error
+      - --location
+      - "{{ item.url }}"
+      - --output
+      - "/usr/local/bin/{{ item.name }}"
+    creates: "/usr/local/bin/{{ item.name }}"
+  register: kubectl_plugin_download
+  changed_when: kubectl_plugin_download.rc == 0
   loop: "{{ kubectl_plugins }}"
   loop_control:
     label: "{{ item.name }}"

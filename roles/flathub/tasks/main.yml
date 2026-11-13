@@ -3,27 +3,51 @@
   ansible.builtin.apt:
     name:
       - flatpak
+      - curl
     state: present
     update_cache: true
   when: ansible_os_family == 'Debian'
 
 - name: Установка flatpak (dnf)
   ansible.builtin.dnf:
-    name: flatpak
+    name:
+      - flatpak
+      - curl
     state: present
   when: ansible_os_family == 'RedHat'
 
-- name: Добавление репозитория flathub
-  ansible.builtin.command: flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+- name: Скачивание конфигурации flathub
+  ansible.builtin.shell: >-
+    curl --fail --location --retry 5 --retry-all-errors --retry-delay 5
+    --connect-timeout 20 --max-time 120
+    --output /tmp/flathub.flatpakrepo.part
+    https://dl.flathub.org/repo/flathub.flatpakrepo
+    && mv /tmp/flathub.flatpakrepo.part /tmp/flathub.flatpakrepo
   args:
     creates: /var/lib/flatpak/repo/flathub
-  when: ansible_os_family == 'RedHat'
+    executable: /bin/bash
+  when: ansible_os_family in ['RedHat', 'Debian']
 
-- name: Добавление репозитория flathub (Debian)
-  ansible.builtin.command: flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+- name: Добавление репозитория flathub
+  ansible.builtin.command:
+    argv:
+      - flatpak
+      - remote-add
+      - --if-not-exists
+      - flathub
+      - /tmp/flathub.flatpakrepo
   args:
     creates: /var/lib/flatpak/repo/flathub
-  when: ansible_os_family == 'Debian'
+  when: ansible_os_family in ['RedHat', 'Debian']
+
+- name: Удаление временных файлов flathub
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /tmp/flathub.flatpakrepo
+    - /tmp/flathub.flatpakrepo.part
+  when: ansible_os_family in ['RedHat', 'Debian']
 
 - name: Установка пакетов из flathub
   community.general.flatpak:

@@ -127,6 +127,63 @@
     owner: root
     group: root
 
+- name: Configure OpenCode HTTP proxy
+  ansible.builtin.command:
+    argv:
+      - /usr/local/bin/opencode
+      - service
+      - set
+      - env
+      - HTTP_PROXY
+      - "{{ proxy_scheme }}://{{ proxy_host }}:{{ proxy_port }}"
+  become: true
+  become_user: "{{ opencode_user }}"
+  environment:
+    HOME: "{{ opencode_home }}"
+  when: use_proxy | bool
+
+- name: Configure OpenCode HTTPS proxy
+  ansible.builtin.command:
+    argv:
+      - /usr/local/bin/opencode
+      - service
+      - set
+      - env
+      - HTTPS_PROXY
+      - "{{ proxy_scheme }}://{{ proxy_host }}:{{ proxy_port }}"
+  become: true
+  become_user: "{{ opencode_user }}"
+  environment:
+    HOME: "{{ opencode_home }}"
+  when: use_proxy | bool
+
+- name: Configure OpenCode proxy exclusions
+  ansible.builtin.command:
+    argv:
+      - /usr/local/bin/opencode
+      - service
+      - set
+      - env
+      - NO_PROXY
+      - "{{ proxy_no_proxy }}"
+  become: true
+  become_user: "{{ opencode_user }}"
+  environment:
+    HOME: "{{ opencode_home }}"
+  when: use_proxy | bool
+
+- name: Start OpenCode service with proxy
+  ansible.builtin.command:
+    argv:
+      - /usr/local/bin/opencode
+      - service
+      - start
+  become: true
+  become_user: "{{ opencode_user }}"
+  environment:
+    HOME: "{{ opencode_home }}"
+  when: use_proxy | bool
+
 - name: Проверка установки OpenCode
   ansible.builtin.command: /usr/local/bin/opencode --version
   changed_when: false

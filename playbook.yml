@@ -1,5 +1,36 @@
 ---
 
+- name: Optimize dnf for Fedora
+  hosts: localhost
+  become: true
+  gather_facts: true
+  tasks:
+    - ansible.builtin.include_role:
+        name: dnf-optimization
+      when: ansible_facts['os_family'] == 'RedHat' and ansible_facts['distribution'] == 'Fedora'
+  tags:
+    - dnf-optimization
+
+- name: Configure Fedora Yandex mirrors
+  hosts: localhost
+  become: true
+  gather_facts: true
+  roles:
+    - role: fedora-yandex-mirrors
+  tags:
+    - fedora-yandex-mirrors
+
+- name: Configure Fedora free codecs
+  hosts: localhost
+  become: true
+  gather_facts: true
+  tasks:
+    - ansible.builtin.include_role:
+        name: fedora-codecs
+      when: ansible_facts['distribution'] == 'Fedora'
+  tags:
+    - fedora-codecs
+
 - name: Install basic components
   hosts: localhost
   become: true
@@ -149,28 +180,6 @@
   tags:
     - clickhouse-client
 
-- name: Optimize dnf for Fedora
-  hosts: localhost
-  become: true
-  gather_facts: true
-  tasks:
-    - ansible.builtin.include_role:
-        name: dnf-optimization
-      when: ansible_facts['os_family'] == 'RedHat' and ansible_facts['distribution'] == 'Fedora'
-  tags:
-    - dnf-optimization
-
-- name: Configure Fedora free codecs
-  hosts: localhost
-  become: true
-  gather_facts: true
-  tasks:
-    - ansible.builtin.include_role:
-        name: fedora-codecs
-      when: ansible_facts['distribution'] == 'Fedora'
-  tags:
-    - fedora-codecs
-
 - name: Install sublime-text
   hosts: localhost
   become: true
@@ -190,6 +199,14 @@
       - terraform
       - packer
       - vault
+  pre_tasks:
+    - name: Remove disabled HashiCorp repository on Fedora
+      ansible.builtin.file:
+        path: /etc/yum.repos.d/hashicorp.repo
+        state: absent
+      when:
+        - ansible_facts['os_family'] == 'RedHat'
+        - not (hashicorp_enabled | bool)
   roles:
     - role: hashicorp
       when: hashicorp_enabled | bool
@@ -269,7 +286,7 @@
   tags:
     - max
 
-- name: Install Minцифры CA certificates
+- name: Install Mincifty CA certificates
   hosts: localhost
   become: true
   gather_facts: true
@@ -337,6 +354,7 @@
   gather_facts: true
   vars:
     opencode_user: "{{ ansible_env.SUDO_USER | default(lookup('env', 'USER')) | default('rmntrvn') }}"
+    use_proxy: true
   roles:
     - role: opencode
   tags:

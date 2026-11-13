@@ -83,6 +83,7 @@
     url: "https://get.helm.sh/helm-v{{ helm_version }}-linux-amd64.tar.gz"
     dest: "/tmp/helm-v{{ helm_version }}-linux-amd64.tar.gz"
     mode: '0644'
+    timeout: 60
   when: ansible_os_family == 'RedHat'
 
 - name: Распаковка Helm (Fedora)

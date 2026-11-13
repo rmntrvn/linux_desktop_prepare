@@ -1,0 +1,15 @@
+---
+galaxy_info:
+  author: linux-desktop-prepare
+  description: Configure Fedora repositories to use Yandex mirrors
+  license: MIT
+  min_ansible_version: '2.15'
+  platforms:
+    - name: Fedora
+      versions:
+        - all
+  galaxy_tags:
+    - fedora
+    - dnf
+    - mirrors
+dependencies: []

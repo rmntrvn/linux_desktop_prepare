@@ -4,6 +4,13 @@ opencode_home: "/home/{{ opencode_user }}"
 opencode_install_root: /usr/local/share/opencode
 opencode_version: ""
 
+# Настройка прокси для OpenCode service
+use_proxy: false
+proxy_host: 127.0.0.1
+proxy_port: 25345
+proxy_scheme: http
+proxy_no_proxy: localhost,127.0.0.1,::1
+
 codebase_memory_mcp_version: ""
 codebase_memory_mcp_bin_dir: "{{ opencode_home }}/.local/bin"
 codebase_memory_mcp_binary: "{{ codebase_memory_mcp_bin_dir }}/codebase-memory-mcp"

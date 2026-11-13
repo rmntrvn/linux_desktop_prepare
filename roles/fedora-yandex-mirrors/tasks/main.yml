@@ -1,0 +1,95 @@
+---
+- name: Validate Fedora operating system
+  ansible.builtin.assert:
+    that:
+      - ansible_facts['distribution'] == 'Fedora'
+    fail_msg: Fedora Yandex mirrors role supports Fedora only.
+
+- name: Download RPM Fusion Free release package from Yandex
+  ansible.builtin.command:
+    argv:
+      - curl
+      - --fail
+      - --silent
+      - --show-error
+      - --location
+      - "{{ fedora_yandex_rpmfusion_release_url }}/free/fedora/rpmfusion-free-release-{{ ansible_facts['distribution_major_version'] }}.noarch.rpm"
+      - --output
+      - "/tmp/rpmfusion-free-release-{{ ansible_facts['distribution_major_version'] }}.noarch.rpm"
+    creates: "/tmp/rpmfusion-free-release-{{ ansible_facts['distribution_major_version'] }}.noarch.rpm"
+
+- name: Download RPM Fusion Nonfree release package from Yandex
+  ansible.builtin.command:
+    argv:
+      - curl
+      - --fail
+      - --silent
+      - --show-error
+      - --location
+      - "{{ fedora_yandex_rpmfusion_release_url }}/nonfree/fedora/rpmfusion-nonfree-release-{{ ansible_facts['distribution_major_version'] }}.noarch.rpm"
+      - --output
+      - "/tmp/rpmfusion-nonfree-release-{{ ansible_facts['distribution_major_version'] }}.noarch.rpm"
+    creates: "/tmp/rpmfusion-nonfree-release-{{ ansible_facts['distribution_major_version'] }}.noarch.rpm"
+
+- name: Install RPM Fusion release packages
+  ansible.builtin.command:
+    argv:
+      - dnf
+      - install
+      - --assumeyes
+      - --nogpgcheck
+      - "/tmp/rpmfusion-free-release-{{ ansible_facts['distribution_major_version'] }}.noarch.rpm"
+      - "/tmp/rpmfusion-nonfree-release-{{ ansible_facts['distribution_major_version'] }}.noarch.rpm"
+  register: fedora_yandex_rpmfusion_install
+  changed_when: fedora_yandex_rpmfusion_install.rc == 0
+
+- name: Remove temporary RPM Fusion release packages
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - "/tmp/rpmfusion-free-release-{{ ansible_facts['distribution_major_version'] }}.noarch.rpm"
+    - "/tmp/rpmfusion-nonfree-release-{{ ansible_facts['distribution_major_version'] }}.noarch.rpm"
+
+- name: Check standard Fedora repository files
+  ansible.builtin.stat:
+    path: "{{ item.path }}"
+  loop: "{{ fedora_yandex_repositories }}"
+  register: fedora_yandex_repository_files
+
+- name: Validate standard Fedora repository files
+  ansible.builtin.assert:
+    that: item.stat.exists
+    fail_msg: "Fedora repository file is missing: {{ item.item.path }}"
+  loop: "{{ fedora_yandex_repository_files.results }}"
+
+- name: Remove metalink from Fedora repositories
+  ansible.builtin.ini_file:
+    path: "{{ item.path }}"
+    section: "{{ item.section }}"
+    option: metalink
+    state: absent
+    backup: true
+  loop: "{{ fedora_yandex_repositories }}"
+  notify: Clean DNF metadata after mirror change
+
+- name: Remove mirrorlist from Fedora repositories
+  ansible.builtin.ini_file:
+    path: "{{ item.path }}"
+    section: "{{ item.section }}"
+    option: mirrorlist
+    state: absent
+    backup: true
+  loop: "{{ fedora_yandex_repositories }}"
+  notify: Clean DNF metadata after mirror change
+
+- name: Configure Yandex baseurl for Fedora repositories
+  ansible.builtin.ini_file:
+    path: "{{ item.path }}"
+    section: "{{ item.section }}"
+    option: baseurl
+    value: "{{ item.baseurl }}"
+    state: present
+    backup: true
+  loop: "{{ fedora_yandex_repositories }}"
+  notify: Clean DNF metadata after mirror change
