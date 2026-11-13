@@ -19,6 +19,7 @@
       clean_requirements_on_remove=True
       best=True
       skip_if_unavailable=True
+      ip_resolve=4
   when: ansible_facts['os_family'] == 'RedHat'
   notify:
     - rebuild dnf cache
