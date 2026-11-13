@@ -58,14 +58,9 @@
   when:
     - ansible_os_family == 'Debian'
 
-- name: Добавление GPG ключа Podman (Fedora)
-  ansible.builtin.rpm_key:
-    key: https://keys.fedoraproject.org/RPM-GPG-KEY-fedora-primary
-    state: present
-    mode: '0644'
-  when:
-    - ansible_os_family == 'RedHat'
-    - ansible_distribution == 'Fedora'
+# Для Fedora отдельный импорт GPG-ключа не требуется: ключи репозиториев
+# поставляются пакетом fedora-gpg-keys и уже подключены в dnf.
+# Модуль ansible.builtin.rpm_key не принимает параметр mode.
 
 - name: Установка Docker (Ubuntu)
   ansible.builtin.apt:

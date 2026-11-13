@@ -127,52 +127,69 @@
     owner: root
     group: root
 
-- name: Configure OpenCode HTTP proxy
+- name: Получение переменных окружения OpenCode service
+  ansible.builtin.command:
+    argv:
+      - /usr/local/bin/opencode
+      - service
+      - get
+      - env
+  become: true
+  become_user: "{{ opencode_user }}"
+  environment:
+    HOME: "{{ opencode_home }}"
+  register: opencode_service_env
+  changed_when: false
+  failed_when: false
+  when: use_proxy | bool
+
+- name: Настройка прокси OpenCode service
   ansible.builtin.command:
     argv:
       - /usr/local/bin/opencode
       - service
       - set
       - env
-      - HTTP_PROXY
-      - "{{ proxy_scheme }}://{{ proxy_host }}:{{ proxy_port }}"
+      - "{{ item.name }}"
+      - "{{ item.value }}"
   become: true
   become_user: "{{ opencode_user }}"
   environment:
     HOME: "{{ opencode_home }}"
-  when: use_proxy | bool
+  loop:
+    - name: HTTP_PROXY
+      value: "{{ proxy_scheme }}://{{ proxy_host }}:{{ proxy_port }}"
+    - name: HTTPS_PROXY
+      value: "{{ proxy_scheme }}://{{ proxy_host }}:{{ proxy_port }}"
+    - name: NO_PROXY
+      value: "{{ proxy_no_proxy }}"
+  loop_control:
+    label: "{{ item.name }}"
+  vars:
+    opencode_current_env: >-
+      {{ (opencode_service_env.stdout | default('', true) | from_json)
+         if (opencode_service_env.rc | default(1)) == 0
+         else {} }}
+  when:
+    - use_proxy | bool
+    - opencode_current_env.get(item.name, '') != item.value
 
-- name: Configure OpenCode HTTPS proxy
+- name: Проверка статуса OpenCode service
   ansible.builtin.command:
     argv:
       - /usr/local/bin/opencode
       - service
-      - set
-      - env
-      - HTTPS_PROXY
-      - "{{ proxy_scheme }}://{{ proxy_host }}:{{ proxy_port }}"
+      - status
   become: true
   become_user: "{{ opencode_user }}"
   environment:
     HOME: "{{ opencode_home }}"
+  register: opencode_service_status
+  changed_when: false
+  failed_when: false
   when: use_proxy | bool
 
-- name: Configure OpenCode proxy exclusions
-  ansible.builtin.command:
-    argv:
-      - /usr/local/bin/opencode
-      - service
-      - set
-      - env
-      - NO_PROXY
-      - "{{ proxy_no_proxy }}"
-  become: true
-  become_user: "{{ opencode_user }}"
-  environment:
-    HOME: "{{ opencode_home }}"
-  when: use_proxy | bool
-
-- name: Start OpenCode service with proxy
+- name: Запуск OpenCode service с прокси
   ansible.builtin.command:
     argv:
       - /usr/local/bin/opencode
@@ -182,7 +199,9 @@
   become_user: "{{ opencode_user }}"
   environment:
     HOME: "{{ opencode_home }}"
-  when: use_proxy | bool
+  when:
+    - use_proxy | bool
+    - opencode_service_status.stdout | default('', true) | trim in ['stopped', '']
 
 - name: Проверка установки OpenCode
   ansible.builtin.command: /usr/local/bin/opencode --version
