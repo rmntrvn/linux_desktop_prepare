@@ -62,6 +62,19 @@ ansible-playbook -i inventory.yml playbook.yml --tags helix-filetree \
   -e 'helix_config=theme = "catppuccin_mocha"' --ask-become-pass
 ```
 
+Роль `globalprotect` устанавливает клиент GlobalProtect-openconnect из
+репозитория `yuezk/globalprotect-openconnect`: PPA
+`ppa:yuezk/globalprotect-openconnect` на Ubuntu 26.04 и COPR
+`yuezk/globalprotect-openconnect` на Fedora 45. Устанавливается пакет
+`globalprotect-openconnect` с CLI `gpclient`. Подключение к порталу:
+```
+sudo gpclient connect <portal>
+```
+Запуск только этой роли:
+```
+ansible-playbook -i inventory.yml playbook.yml --tags globalprotect --ask-become-pass
+```
+
 ## TODO:
 
 - [x] Роль установки zsh с плагином oh-my-zsh.

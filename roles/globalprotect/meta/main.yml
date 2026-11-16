@@ -1,0 +1,19 @@
+---
+galaxy_info:
+  author: linux_desktop_prepare
+  description: Установка клиента GlobalProtect-openconnect (yuezk) для Ubuntu 26.04 и Fedora 45
+  license: MIT
+  min_ansible_version: "2.14"
+  platforms:
+    - name: Ubuntu
+      versions:
+        - "26.04"
+    - name: Fedora
+      versions:
+        - "45"
+  galaxy_tags:
+    - globalprotect
+    - vpn
+    - openconnect
+
+dependencies: []

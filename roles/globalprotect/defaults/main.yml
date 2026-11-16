@@ -1,0 +1,14 @@
+---
+# Пакет GlobalProtect-openconnect (CLI gpclient и сопутствующие утилиты)
+globalprotect_package: globalprotect-openconnect
+
+# PPA для Ubuntu: ppa:yuezk/globalprotect-openconnect
+globalprotect_ppa_uri: https://ppa.launchpadcontent.net/yuezk/globalprotect-openconnect/ubuntu
+globalprotect_ppa_key_fingerprint: 7937C393082992E5D6E4A60453FC26B43838D761
+globalprotect_ppa_key_url: "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x{{ globalprotect_ppa_key_fingerprint }}"
+globalprotect_apt_keyring_asc: /etc/apt/keyrings/globalprotect-openconnect.asc
+globalprotect_apt_keyring: /etc/apt/keyrings/globalprotect-openconnect.gpg
+
+# COPR для Fedora: copr enable yuezk/globalprotect-openconnect
+globalprotect_copr_project: yuezk/globalprotect-openconnect
+globalprotect_copr_repo_file: "/etc/yum.repos.d/_copr:copr.fedorainfracloud.org:yuezk:globalprotect-openconnect.repo"

@@ -316,6 +316,15 @@
   tags:
     - tailscale
 
+- name: Install GlobalProtect client
+  hosts: localhost
+  become: true
+  gather_facts: true
+  roles:
+    - role: globalprotect
+  tags:
+    - globalprotect
+
 - name: Install Docker/Podman
   hosts: localhost
   become: true

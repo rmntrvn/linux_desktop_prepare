@@ -1,0 +1,90 @@
+---
+- name: Validate supported operating system
+  ansible.builtin.assert:
+    that:
+      - ansible_facts['distribution'] in ['Ubuntu', 'Fedora']
+      - ansible_facts['distribution'] != 'Ubuntu' or ansible_facts['distribution_version'] is version('26.04', '==')
+      - ansible_facts['distribution'] != 'Fedora' or ansible_facts['distribution_major_version'] == '45'
+    fail_msg: GlobalProtect role supports Ubuntu 26.04 and Fedora 45.
+
+- name: Install GlobalProtect dependencies (Ubuntu)
+  ansible.builtin.apt:
+    name:
+      - ca-certificates
+      - gnupg
+      - python3-debian
+    state: present
+    update_cache: true
+  when: ansible_facts['distribution'] == 'Ubuntu'
+
+- name: Create APT keyrings directory (Ubuntu)
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+  when: ansible_facts['distribution'] == 'Ubuntu'
+
+- name: Download GlobalProtect PPA signing key (Ubuntu)
+  ansible.builtin.get_url:
+    url: "{{ globalprotect_ppa_key_url }}"
+    dest: "{{ globalprotect_apt_keyring_asc }}"
+    owner: root
+    group: root
+    mode: '0644'
+  when: ansible_facts['distribution'] == 'Ubuntu'
+
+- name: Dearmor GlobalProtect PPA signing key (Ubuntu)
+  ansible.builtin.command:
+    cmd: "gpg --batch --yes --dearmor -o {{ globalprotect_apt_keyring }} {{ globalprotect_apt_keyring_asc }}"
+    creates: "{{ globalprotect_apt_keyring }}"
+  when: ansible_facts['distribution'] == 'Ubuntu'
+
+- name: Add GlobalProtect repository (Ubuntu)
+  ansible.builtin.deb822_repository:
+    name: globalprotect-openconnect
+    types: deb
+    uris: "{{ globalprotect_ppa_uri }}"
+    suites: "{{ ansible_facts['distribution_release'] }}"
+    components: [main]
+    architectures: [amd64]
+    signed_by: "{{ globalprotect_apt_keyring }}"
+    state: present
+  when: ansible_facts['distribution'] == 'Ubuntu'
+
+- name: Install GlobalProtect (Ubuntu)
+  ansible.builtin.apt:
+    name: "{{ globalprotect_package }}"
+    state: present
+    update_cache: true
+  when: ansible_facts['distribution'] == 'Ubuntu'
+
+- name: Install GlobalProtect dependencies (Fedora)
+  ansible.builtin.dnf:
+    name:
+      - dnf-plugins-core
+    state: present
+  when: ansible_facts['distribution'] == 'Fedora'
+
+- name: Enable GlobalProtect COPR repository (Fedora)
+  ansible.builtin.command:
+    cmd: "dnf -y copr enable {{ globalprotect_copr_project }}"
+    creates: "{{ globalprotect_copr_repo_file }}"
+  when: ansible_facts['distribution'] == 'Fedora'
+
+- name: Install GlobalProtect (Fedora)
+  ansible.builtin.dnf:
+    name: "{{ globalprotect_package }}"
+    state: present
+  when: ansible_facts['distribution'] == 'Fedora'
+
+- name: Check installed GlobalProtect client version
+  ansible.builtin.command: gpclient --version
+  register: globalprotect_installed_version
+  changed_when: false
+  failed_when: false
+
+- name: Display installed GlobalProtect client version
+  ansible.builtin.debug:
+    msg: "Установлен GlobalProtect-openconnect: {{ globalprotect_installed_version.stdout | default('Не удалось определить') }}"
